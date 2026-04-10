@@ -105,7 +105,7 @@ export default function PostCard({ post, onComment }: PostCardProps) {
             {post.event.seats > 0 && (
               <div className="flex items-center gap-2 text-xs" style={{ color: 'var(--color-gold)' }}>
                 <span>🪑</span>
-                <span>{post.event.seats - post.event.rsvpCount} seats left · {post.event.rsvpCount} going</span>
+                <span>{(post.event.seats ?? 0) - (post.event.rsvpCount ?? 0)} seats left · {post.event.rsvpCount ?? 0} going</span>
               </div>
             )}
             {post.event.seats === 0 && post.event.rsvpCount > 0 && (
@@ -143,7 +143,7 @@ export default function PostCard({ post, onComment }: PostCardProps) {
           {isEvent && (
             <button
               onClick={handleRsvp}
-              disabled={rsvpd || (post.event?.seats > 0 && post.event?.rsvpCount >= post.event?.seats)}
+              disabled={rsvpd || ((post.event?.seats ?? 0) > 0 && (post.event?.rsvpCount ?? 0) >= (post.event?.seats ?? 0))}
               className="ml-auto px-3 py-1.5 rounded-full text-xs font-semibold transition-all disabled:opacity-50"
               style={{
                 background: rsvpd ? 'rgba(34,197,94,0.15)' : 'var(--color-red)',
