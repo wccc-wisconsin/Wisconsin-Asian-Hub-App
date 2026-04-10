@@ -1,10 +1,11 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { usePlaylist } from '../../hooks/usePlaylist'
 import VideoCard from './components/VideoCard'
 import VideoPlayer from './components/VideoPlayer'
 
-const PLAYLIST_ID = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID ?? ''
-const API_KEY     = import.meta.env.VITE_YOUTUBE_API_KEY ?? ''
+const PLAYLIST_ID  = import.meta.env.VITE_YOUTUBE_PLAYLIST_ID ?? ''
+const API_KEY      = import.meta.env.VITE_YOUTUBE_API_KEY ?? ''
+const ROTATE_MS    = 8000
 
 function SkeletonCard() {
   return (
@@ -21,8 +22,9 @@ function SkeletonCard() {
 
 export default function VideosModule() {
   const { videos, loading, error } = usePlaylist(PLAYLIST_ID, API_KEY)
-  const [search, setSearch]         = useState('')
-  const [activeVideo, setActiveVideo] = useState<{ videoId: string; title: string } | null>(null)
+  const [search, setSearch]        = useState('')
+  const [featuredIndex, setFeaturedIndex] = useState(0)
+  const [activeVideo, setActiveVideo]     = useState<{ videoId: string; title: string } | null>(null)
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -31,8 +33,20 @@ export default function VideosModule() {
     )
   }, [videos, search])
 
-  const featured = filtered[0]
-  const rest     = filtered.slice(1)
+  // Auto-rotate featured every 8s, pause when player is open or searching
+  useEffect(() => {
+    if (filtered.length <= 1 || activeVideo || search) return
+    const timer = setInterval(() => {
+      setFeaturedIndex(i => (i + 1) % filtered.length)
+    }, ROTATE_MS)
+    return () => clearInterval(timer)
+  }, [filtered.length, activeVideo, search])
+
+  // Reset featured index when search changes
+  useEffect(() => { setFeaturedIndex(0) }, [search])
+
+  const featured = filtered[featuredIndex]
+  const rest     = filtered.filter((_, i) => i !== featuredIndex)
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
@@ -89,7 +103,7 @@ export default function VideosModule() {
         </div>
       )}
 
-      {/* Content */}
+      {/* Empty */}
       {!loading && !error && filtered.length === 0 && (
         <div className="text-center py-20">
           <p className="text-4xl mb-3">🎬</p>
@@ -98,15 +112,49 @@ export default function VideosModule() {
         </div>
       )}
 
+      {/* Content */}
       {!loading && !error && featured && (
         <>
-          {/* Featured video */}
-          <div className="mt-4">
+          {/* Featured — rotates every 8s */}
+          <div className="mt-4 relative">
             <VideoCard
+              key={featured.videoId}
               video={featured}
               featured
               onClick={() => setActiveVideo({ videoId: featured.videoId, title: featured.title })}
             />
+
+            {/* Dot indicators */}
+            {filtered.length > 1 && !search && (
+              <div className="absolute bottom-16 left-0 right-0 flex justify-center gap-1.5 pb-2">
+                {filtered.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setFeaturedIndex(i)}
+                    className="rounded-full transition-all"
+                    style={{
+                      width:  i === featuredIndex ? 20 : 6,
+                      height: 6,
+                      background: i === featuredIndex ? '#fff' : 'rgba(255,255,255,0.4)',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Progress bar */}
+            {!search && filtered.length > 1 && (
+              <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ background: 'rgba(255,255,255,0.15)' }}>
+                <div
+                  key={featuredIndex}
+                  className="h-full"
+                  style={{
+                    background: 'var(--color-red)',
+                    animation: `progressBar ${ROTATE_MS}ms linear forwards`,
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Rest of playlist */}
@@ -126,6 +174,14 @@ export default function VideosModule() {
           )}
         </>
       )}
+
+      {/* Progress bar keyframe */}
+      <style>{`
+        @keyframes progressBar {
+          from { width: 0% }
+          to   { width: 100% }
+        }
+      `}</style>
     </div>
   )
 }
