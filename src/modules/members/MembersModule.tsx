@@ -110,35 +110,11 @@ const [config, setConfig] = useState<SheetConfig | null>({
                 <p className="font-medium" style={{ color: 'var(--color-text)' }}>No members found</p>
                 <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>Try adjusting your filters</p>
               </div>
-            ) : city ? (
+) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filtered.map((m, i) => (
                   <MemberCard key={m.id} member={m}
                     style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards' }} />
-                ))}
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {groupedByCity.map(([cityName, cityMembers]) => (
-                  <section key={cityName}>
-                    <div className="flex items-center gap-3 mb-3">
-                      <h2 className="font-display text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
-                        📍 {cityName}
-                      </h2>
-                      <span className="chip text-xs" style={{
-                        background: 'rgba(185,28,28,0.1)', color: 'var(--color-red)',
-                        border: '1px solid rgba(185,28,28,0.2)'
-                      }}>
-                        {cityMembers.length}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {cityMembers.map((m, i) => (
-                        <MemberCard key={m.id} member={m}
-                          style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards' }} />
-                      ))}
-                    </div>
-                  </section>
                 ))}
               </div>
             )}
