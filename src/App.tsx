@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import MembersModule from './modules/members/MembersModule'
 import VideosModule  from './modules/videos/VideosModule'
 import BoardModule   from './modules/board/BoardModule'
@@ -7,12 +7,35 @@ import GivingModule  from './modules/giving/GivingModule'
 import DineModule    from './modules/din/DineModule'
 import ChatWindow    from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'dine' | 'community' | 'giving' | 'chat' | 'members' | 'board'
+type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat'
+
+const TAB_META: Record<Tab, { icon: string; label: string }> = {
+  videos:  { icon: '🎬', label: 'Videos'  },
+  dine:    { icon: '🍜', label: 'Dine'    },
+  giving:  { icon: '🤝', label: 'Giving'  },
+  members: { icon: '👥', label: 'Members' },
+  board:   { icon: '📋', label: 'Board'   },
+  chat:    { icon: '🤖', label: 'Chat'    },
+}
+
+const MORE_TABS: Tab[] = ['members', 'board', 'chat']
 
 export default function App() {
   const [tab, setTab]               = useState<Tab>('videos')
   const [bubbleOpen, setBubbleOpen] = useState(false)
   const [moreOpen, setMoreOpen]     = useState(false)
+  const moreRef                     = useRef<HTMLDivElement>(null)
+
+  // Close popup when clicking outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false)
+      }
+    }
+    if (moreOpen) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [moreOpen])
 
   function navigate(t: Tab) {
     setTab(t)
@@ -20,20 +43,8 @@ export default function App() {
     setBubbleOpen(false)
   }
 
-  const tabLabel: Record<Tab, { icon: string; label: string }> = {
-    videos:    { icon: '🎬', label: 'Videos'    },
-    dine:      { icon: '🍜', label: 'Dine'      },
-    community: { icon: '👥', label: 'Community' },
-    giving:    { icon: '🤝', label: 'Giving'    },
-    chat:      { icon: '🤖', label: 'Chat'      },
-    members:   { icon: '👥', label: 'Members'   },
-    board:     { icon: '📋', label: 'Board'     },
-  }
-
-  const activeLabel = tabLabel[tab]
-
-  // Community = Members or Board
-  const isCommunityTab = tab === 'members' || tab === 'board' || tab === 'community'
+  const isMoreTab   = MORE_TABS.includes(tab)
+  const activeLabel = TAB_META[tab]
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
@@ -63,11 +74,10 @@ export default function App() {
       <main>
         {tab === 'videos'  && <VideosModule  />}
         {tab === 'dine'    && <DineModule    />}
+        {tab === 'giving'  && <GivingModule  />}
         {tab === 'members' && <MembersModule />}
         {tab === 'board'   && <BoardModule   />}
-        {tab === 'giving'  && <GivingModule  />}
         {tab === 'chat'    && <ChatModule    />}
-        {tab === 'community' && <MembersModule />}
       </main>
 
       {/* Floating chat bubble */}
@@ -75,7 +85,7 @@ export default function App() {
         <>
           <button
             onClick={() => { setBubbleOpen(o => !o); setMoreOpen(false) }}
-            className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-lg transition-transform active:scale-95"
+            className="fixed z-40 w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-lg transition-transform active:scale-95"
             style={{
               bottom: '5.5rem',
               right: tab === 'board' ? 'auto' : '1.25rem',
@@ -90,74 +100,63 @@ export default function App() {
         </>
       )}
 
-      {/* More drawer backdrop */}
-      {moreOpen && (
-        <div className="fixed inset-0 z-40" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
-          onClick={() => setMoreOpen(false)} />
-      )}
-
-      {/* More drawer */}
-      <div className="fixed left-0 right-0 z-50 transition-all duration-300"
-        style={{
-          bottom: moreOpen ? '64px' : '-200px',
-          background: 'var(--color-surface)',
-          borderTop: '1px solid var(--color-border)',
-          borderRadius: '16px 16px 0 0',
-          boxShadow: '0 -8px 32px rgba(0,0,0,0.4)',
-        }}>
-        <div className="px-4 pt-3 pb-2">
-          <div className="w-8 h-1 rounded-full mx-auto mb-4" style={{ background: 'var(--color-border)' }} />
-          <p className="text-xs font-semibold mb-3 px-1" style={{ color: 'var(--color-muted)' }}>MORE</p>
-          <div className="grid grid-cols-4 gap-2 pb-2">
-            {[
-              { id: 'members', icon: '👥', label: 'Members' },
-              { id: 'board',   icon: '📋', label: 'Board'   },
-              { id: 'chat',    icon: '🤖', label: 'Chat'    },
-            ].map(t => (
-              <button key={t.id}
-                onClick={() => navigate(t.id as Tab)}
-                className="flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all"
-                style={{
-                  background: tab === t.id ? 'rgba(185,28,28,0.12)' : 'rgba(255,255,255,0.03)',
-                  border: `1px solid ${tab === t.id ? 'rgba(185,28,28,0.3)' : 'var(--color-border)'}`,
-                }}>
-                <span className="text-2xl">{t.icon}</span>
-                <span className="text-xs font-medium" style={{
-                  color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)'
-                }}>{t.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom nav — 4 primary tabs + More */}
+      {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 border-t flex" style={{
         background: 'rgba(12,10,9,0.97)', backdropFilter: 'blur(12px)',
-        borderColor: 'var(--color-border)', height: 64,
+        borderColor: 'var(--color-border)', height: 64, zIndex: 50,
       }}>
-        {[
-          { id: 'videos',  icon: '🎬', label: 'Videos'  },
-          { id: 'dine',    icon: '🍜', label: 'Dine'    },
-          { id: 'giving',  icon: '🤝', label: 'Giving'  },
-        ].map(t => (
-          <button key={t.id}
-            onClick={() => navigate(t.id as Tab)}
+        {/* Primary tabs */}
+        {(['videos', 'dine', 'giving'] as Tab[]).map(t => (
+          <button key={t}
+            onClick={() => navigate(t)}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
-            style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}>
-            <span className="text-xl">{t.icon}</span>
-            {t.label}
+            style={{ color: tab === t ? 'var(--color-red)' : 'var(--color-muted)' }}>
+            <span className="text-xl">{TAB_META[t].icon}</span>
+            {TAB_META[t].label}
           </button>
         ))}
 
-        {/* More button */}
-        <button
-          onClick={() => { setMoreOpen(o => !o); setBubbleOpen(false) }}
-          className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
-          style={{ color: (isCommunityTab || tab === 'chat') ? 'var(--color-red)' : 'var(--color-muted)' }}>
-          <span className="text-xl">{moreOpen ? '✕' : '⋯'}</span>
-          More
-        </button>
+        {/* More button with popup */}
+        <div ref={moreRef} className="flex-1 relative flex flex-col items-center justify-center">
+          {/* Popup menu — appears above the button */}
+          {moreOpen && (
+            <div className="absolute bottom-full mb-2 right-0 rounded-2xl overflow-hidden shadow-2xl"
+              style={{
+                background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)',
+                minWidth: 160,
+                boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
+              }}>
+              {MORE_TABS.map((t, i) => (
+                <button key={t}
+                  onClick={() => navigate(t)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left"
+                  style={{
+                    color: tab === t ? 'var(--color-red)' : 'var(--color-text)',
+                    background: tab === t ? 'rgba(185,28,28,0.1)' : 'transparent',
+                    borderBottom: i < MORE_TABS.length - 1 ? '1px solid var(--color-border)' : 'none',
+                  }}>
+                  <span className="text-lg">{TAB_META[t].icon}</span>
+                  {TAB_META[t].label}
+                  {tab === t && <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-red)' }} />}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* More button */}
+          <button
+            onClick={() => { setMoreOpen(o => !o); setBubbleOpen(false) }}
+            className="w-full h-full flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
+            style={{ color: isMoreTab || moreOpen ? 'var(--color-red)' : 'var(--color-muted)' }}>
+            <span className="text-xl" style={{
+              transform: moreOpen ? 'rotate(90deg)' : 'none',
+              transition: 'transform 0.2s ease',
+              display: 'inline-block',
+            }}>⋯</span>
+            More
+          </button>
+        </div>
       </nav>
     </div>
   )
