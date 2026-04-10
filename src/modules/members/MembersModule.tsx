@@ -114,7 +114,7 @@ const [config, setConfig] = useState<SheetConfig | null>({
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filtered.map((m, i) => (
                   <MemberCard key={m.id} member={m}
-                    style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards', opacity: 0 }} />
+                    style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards' }} />
                 ))}
               </div>
             ) : (
@@ -135,7 +135,7 @@ const [config, setConfig] = useState<SheetConfig | null>({
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {cityMembers.map((m, i) => (
                         <MemberCard key={m.id} member={m}
-                          style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards', opacity: 0 }} />
+                          style={{ animationDelay: `${i * 40}ms`, animation: 'fadeUp 0.4s ease forwards' }} />
                       ))}
                     </div>
                   </section>
