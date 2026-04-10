@@ -11,11 +11,10 @@ export default function ShareCard({ restaurant, onClose }: ShareCardProps) {
     : `🍽️ Dine Asian Wisconsin!\n\n${restaurant.name} — ${restaurant.cuisine} in ${restaurant.city}\n\n${restaurant.description}\n\nDiscover more Asian restaurants at hub.wcccbusinessnetwork.org\n\n#DineAsianWisconsin #WisconsinAsianHub`
 
   async function handleShare() {
-    if ('share' in navigator) {
-      await navigator.share({ title: restaurant.name, text: shareText, url: 'https://hub.wcccbusinessnetwork.org' })
-    } else {
-if (navigator.clipboard) {
-  await navigator.clipboard.writeText(shareText)
+if ('share' in navigator) {
+  await (navigator as Navigator & { share: (data: object) => Promise<void> }).share({ 
+    title: restaurant.name, text: shareText, url: 'https://hub.wcccbusinessnetwork.org' 
+  })
 } else {
   const el = document.createElement('textarea')
   el.value = shareText
@@ -23,8 +22,8 @@ if (navigator.clipboard) {
   el.select()
   document.execCommand('copy')
   document.body.removeChild(el)
+  alert('Copied to clipboard!')
 }
-alert('Copied to clipboard!')
     }
     onClose()
   }
