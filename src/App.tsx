@@ -2,18 +2,21 @@ import { useState } from 'react'
 import MembersModule from './modules/members/MembersModule'
 import VideosModule  from './modules/videos/VideosModule'
 import BoardModule   from './modules/board/BoardModule'
+import ChatModule    from './modules/chat/ChatModule'
+import ChatWindow    from './modules/chat/components/ChatWindow'
 
-type Tab = 'members' | 'videos' | 'board'
+type Tab = 'members' | 'videos' | 'board' | 'chat'
 
 const TABS = [
   { id: 'members', icon: '👥', label: 'Members' },
   { id: 'videos',  icon: '🎬', label: 'Videos'  },
   { id: 'board',   icon: '📋', label: 'Board'   },
-  { id: 'events',  icon: '📅', label: 'Events'  },
+  { id: 'chat',    icon: '🤖', label: 'Chat'    },
 ] as const
 
 export default function App() {
-  const [tab, setTab] = useState<Tab>('members')
+  const [tab, setTab]             = useState<Tab>('members')
+  const [bubbleOpen, setBubbleOpen] = useState(false)
 
   const tabLabel = TABS.find(t => t.id === tab)
 
@@ -50,7 +53,31 @@ export default function App() {
         {tab === 'members' && <MembersModule />}
         {tab === 'videos'  && <VideosModule  />}
         {tab === 'board'   && <BoardModule   />}
+        {tab === 'chat'    && <ChatModule    />}
       </main>
+
+      {/* Floating chat bubble — visible on all tabs except chat */}
+      {tab !== 'chat' && (
+        <>
+          <button
+            onClick={() => setBubbleOpen(o => !o)}
+            className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-lg transition-transform active:scale-95"
+            style={{
+              bottom: '5.5rem',
+              right: '1.25rem',
+              background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
+              boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
+              border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
+            }}
+          >
+            {bubbleOpen ? '✕' : '🤖'}
+          </button>
+
+          {bubbleOpen && (
+            <ChatWindow onClose={() => setBubbleOpen(false)} />
+          )}
+        </>
+      )}
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 border-t flex" style={{
@@ -61,7 +88,7 @@ export default function App() {
         {TABS.map(t => (
           <button
             key={t.id}
-            onClick={() => t.id !== 'events' && setTab(t.id as Tab)}
+            onClick={() => { setTab(t.id as Tab); setBubbleOpen(false) }}
             className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
             style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}
           >
