@@ -25,13 +25,13 @@ export default function App() {
               Wisconsin Asian Hub
             </span>
           </div>
-          <span className="chip text-xs" style={{
-            background: 'rgba(185,28,28,0.15)',
-            color: 'var(--color-gold)',
-            border: '1px solid rgba(185,28,28,0.3)'
-          }}>
-            WCCC Directory
-          </span>
+<span className="chip text-xs" style={{
+  background: 'rgba(185,28,28,0.15)',
+  color: 'var(--color-gold)',
+  border: '1px solid rgba(185,28,28,0.3)'
+}}>
+  {tab === 'members' ? '👥 Members' : '🎬 Videos'}
+</span>
         </div>
       </header>
 
