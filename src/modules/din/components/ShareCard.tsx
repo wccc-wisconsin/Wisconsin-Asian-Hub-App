@@ -11,19 +11,20 @@ export default function ShareCard({ restaurant, onClose }: ShareCardProps) {
     : `🍽️ Dine Asian Wisconsin!\n\n${restaurant.name} — ${restaurant.cuisine} in ${restaurant.city}\n\n${restaurant.description}\n\nDiscover more Asian restaurants at hub.wcccbusinessnetwork.org\n\n#DineAsianWisconsin #WisconsinAsianHub`
 
   async function handleShare() {
-if ('share' in navigator) {
-  await (navigator as Navigator & { share: (data: object) => Promise<void> }).share({ 
-    title: restaurant.name, text: shareText, url: 'https://hub.wcccbusinessnetwork.org' 
-  })
-} else {
-  const el = document.createElement('textarea')
-  el.value = shareText
-  document.body.appendChild(el)
-  el.select()
-  document.execCommand('copy')
-  document.body.removeChild(el)
-  alert('Copied to clipboard!')
-}
+    if ('share' in navigator) {
+      await (navigator as { share: (d: object) => Promise<void> }).share({
+        title: restaurant.name,
+        text: shareText,
+        url: 'https://hub.wcccbusinessnetwork.org'
+      })
+    } else {
+      const el = document.createElement('textarea')
+      el.value = shareText
+      document.body.appendChild(el)
+      el.select()
+      document.execCommand('copy')
+      document.body.removeChild(el)
+      alert('Copied to clipboard!')
     }
     onClose()
   }
@@ -36,7 +37,6 @@ if ('share' in navigator) {
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
         onClick={e => e.stopPropagation()}>
 
-        {/* Preview card */}
         <div className="p-4 space-y-3" style={{
           background: 'linear-gradient(135deg, #1a0505 0%, #2d1010 100%)'
         }}>
@@ -66,7 +66,6 @@ if ('share' in navigator) {
           </p>
         </div>
 
-        {/* Actions */}
         <div className="p-4 space-y-3">
           <button onClick={handleShare}
             className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
