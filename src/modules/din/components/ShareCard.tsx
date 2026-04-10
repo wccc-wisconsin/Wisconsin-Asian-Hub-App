@@ -11,7 +11,7 @@ export default function ShareCard({ restaurant, onClose }: ShareCardProps) {
     : `🍽️ Dine Asian Wisconsin!\n\n${restaurant.name} — ${restaurant.cuisine} in ${restaurant.city}\n\n${restaurant.description}\n\nDiscover more Asian restaurants at hub.wcccbusinessnetwork.org\n\n#DineAsianWisconsin #WisconsinAsianHub`
 
   async function handleShare() {
-    if (navigator.share) {
+    if ('share' in navigator) {
       await navigator.share({ title: restaurant.name, text: shareText, url: 'https://hub.wcccbusinessnetwork.org' })
     } else {
       await navigator.clipboard.writeText(shareText)
@@ -63,7 +63,7 @@ export default function ShareCard({ restaurant, onClose }: ShareCardProps) {
           <button onClick={handleShare}
             className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
             style={{ background: 'var(--color-red)', color: '#fff' }}>
-            📤 {navigator.share ? 'Share' : 'Copy to Clipboard'}
+            📤 {'share' in navigator ? 'Share' : 'Copy to Clipboard'}
           </button>
           <button onClick={onClose}
             className="w-full py-2.5 rounded-xl text-sm"
