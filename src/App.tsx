@@ -62,13 +62,14 @@ export default function App() {
           <button
             onClick={() => setBubbleOpen(o => !o)}
             className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-lg transition-transform active:scale-95"
-            style={{
-              bottom: '5.5rem',
-              right: '1.25rem',
-              background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
-              boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
-              border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
-            }}
+style={{
+  bottom: '5.5rem',
+  right: tab === 'board' ? 'auto' : '1.25rem',
+  left: tab === 'board' ? '1.25rem' : 'auto',
+  background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
+  boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
+  border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
+}}
           >
             {bubbleOpen ? '✕' : '🤖'}
           </button>
