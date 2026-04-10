@@ -15,6 +15,7 @@ export interface DonationItem {
   category: ItemCategory
   city: string
   donorName: string
+  donorOrg: string          // organization / nonprofit name
   donorEmail: string
   donorPhone: string
   status: ItemStatus
