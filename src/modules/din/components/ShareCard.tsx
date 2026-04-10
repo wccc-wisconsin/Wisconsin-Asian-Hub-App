@@ -14,8 +14,17 @@ export default function ShareCard({ restaurant, onClose }: ShareCardProps) {
     if ('share' in navigator) {
       await navigator.share({ title: restaurant.name, text: shareText, url: 'https://hub.wcccbusinessnetwork.org' })
     } else {
-      await navigator.clipboard.writeText(shareText)
-      alert('Copied to clipboard!')
+if (navigator.clipboard) {
+  await navigator.clipboard.writeText(shareText)
+} else {
+  const el = document.createElement('textarea')
+  el.value = shareText
+  document.body.appendChild(el)
+  el.select()
+  document.execCommand('copy')
+  document.body.removeChild(el)
+}
+alert('Copied to clipboard!')
     }
     onClose()
   }
