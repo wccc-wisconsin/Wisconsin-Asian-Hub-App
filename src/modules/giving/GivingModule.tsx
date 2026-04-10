@@ -59,7 +59,7 @@ export default function GivingModule() {
           WCCC Community Giving
         </h1>
         <p className="text-sm leading-relaxed max-w-sm mx-auto" style={{ color: 'var(--color-muted)' }}>
-          Donate items you no longer need. WCCC matches them with member businesses who can put them to good use.
+          Nonprofit organizations and donors contribute items they no longer need. WCCC matches them with Asian-owned member businesses who can put them to good use.
         </p>
         <div className="flex items-center justify-center gap-2 mt-3">
           <span className="chip text-xs" style={{
@@ -164,7 +164,7 @@ export default function GivingModule() {
           </p>
           <div className="space-y-2">
             {[
-              ['🎁', 'Anyone donates items they no longer need'],
+              ['🎁', 'Nonprofits & donors contribute items they no longer need'],
               ['👀', 'WCCC members browse available items'],
               ['✋', 'Members request items their business needs'],
               ['🤝', 'WCCC coordinates the match & pickup'],
