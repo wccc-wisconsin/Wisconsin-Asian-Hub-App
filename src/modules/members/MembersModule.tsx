@@ -6,13 +6,6 @@ import SheetConfigScreen from './components/SheetConfig'
 
 const STORAGE_KEY = 'wccc_sheet_config'
 
-function loadConfig(): SheetConfig | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return raw ? JSON.parse(raw) : null
-  } catch { return null }
-}
-
 function SkeletonCard() {
   return (
     <div className="rounded-xl overflow-hidden" style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
@@ -36,7 +29,11 @@ function SkeletonCard() {
 }
 
 export default function MembersModule() {
-  const [config, setConfig] = useState<SheetConfig | null>(loadConfig)
+const [config, setConfig] = useState<SheetConfig | null>({
+  sheetId:   import.meta.env.VITE_SHEET_ID   ?? '',
+  apiKey:    import.meta.env.VITE_SHEETS_API_KEY ?? '',
+  sheetName: import.meta.env.VITE_SHEET_NAME ?? 'Sheet1',
+})
   const [city, setCity]         = useState('')
   const [category, setCategory] = useState('')
   const [search, setSearch]     = useState('')
