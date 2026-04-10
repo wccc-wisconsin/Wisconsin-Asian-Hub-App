@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import MembersModule from './modules/members/MembersModule'
-import VideosModule from './modules/videos/VideosModule'
+import VideosModule  from './modules/videos/VideosModule'
+import BoardModule   from './modules/board/BoardModule'
 
-type Tab = 'members' | 'videos'
+type Tab = 'members' | 'videos' | 'board'
+
+const TABS = [
+  { id: 'members', icon: '👥', label: 'Members' },
+  { id: 'videos',  icon: '🎬', label: 'Videos'  },
+  { id: 'board',   icon: '📋', label: 'Board'   },
+  { id: 'events',  icon: '📅', label: 'Events'  },
+] as const
 
 export default function App() {
   const [tab, setTab] = useState<Tab>('members')
+
+  const tabLabel = TABS.find(t => t.id === tab)
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
@@ -25,20 +35,21 @@ export default function App() {
               Wisconsin Asian Hub
             </span>
           </div>
-<span className="chip text-xs" style={{
-  background: 'rgba(185,28,28,0.15)',
-  color: 'var(--color-gold)',
-  border: '1px solid rgba(185,28,28,0.3)'
-}}>
-  {tab === 'members' ? '👥 Members' : '🎬 Videos'}
-</span>
+          <span className="chip text-xs" style={{
+            background: 'rgba(185,28,28,0.15)',
+            color: 'var(--color-gold)',
+            border: '1px solid rgba(185,28,28,0.3)'
+          }}>
+            {tabLabel?.icon} {tabLabel?.label}
+          </span>
         </div>
       </header>
 
       {/* Active Module */}
       <main>
         {tab === 'members' && <MembersModule />}
-        {tab === 'videos'  && <VideosModule />}
+        {tab === 'videos'  && <VideosModule  />}
+        {tab === 'board'   && <BoardModule   />}
       </main>
 
       {/* Bottom nav */}
@@ -47,36 +58,17 @@ export default function App() {
         backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
-        <button
-          onClick={() => setTab('members')}
-          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
-          style={{ color: tab === 'members' ? 'var(--color-red)' : 'var(--color-muted)' }}
-        >
-          <span className="text-lg">👥</span>
-          Members
-        </button>
-        <button
-          onClick={() => setTab('videos')}
-          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
-          style={{ color: tab === 'videos' ? 'var(--color-red)' : 'var(--color-muted)' }}
-        >
-          <span className="text-lg">🎬</span>
-          Videos
-        </button>
-        <button
-          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
-          style={{ color: 'var(--color-muted)' }}
-        >
-          <span className="text-lg">📅</span>
-          Events
-        </button>
-        <button
-          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
-          style={{ color: 'var(--color-muted)' }}
-        >
-          <span className="text-lg">📌</span>
-          Resources
-        </button>
+        {TABS.map(t => (
+          <button
+            key={t.id}
+            onClick={() => t.id !== 'events' && setTab(t.id as Tab)}
+            className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
+            style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}
+          >
+            <span className="text-lg">{t.icon}</span>
+            {t.label}
+          </button>
+        ))}
       </nav>
     </div>
   )
