@@ -33,11 +33,12 @@ export default function FilterBar({
             value={search}
             onChange={e => onSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none transition-all"
-            style={{
-              background: 'var(--color-surface)',
-              border: '1px solid var(--color-border)',
-              color: 'var(--color-text)',
-            }}
+style={{
+  background: 'var(--color-surface)',
+  border: '1px solid var(--color-border)',
+  color: 'var(--color-text)',
+  fontSize: '16px',
+}}
           />
           {search && (
             <button 
