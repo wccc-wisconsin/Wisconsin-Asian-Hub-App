@@ -1,11 +1,17 @@
+import { useState } from 'react'
 import MembersModule from './modules/members/MembersModule'
+import VideosModule from './modules/videos/VideosModule'
+
+type Tab = 'members' | 'videos'
 
 export default function App() {
+  const [tab, setTab] = useState<Tab>('members')
+
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b" style={{ 
-        background: 'rgba(12,10,9,0.92)', 
+      <header className="sticky top-0 z-50 border-b" style={{
+        background: 'rgba(12,10,9,0.92)',
         backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
@@ -19,8 +25,8 @@ export default function App() {
               Wisconsin Asian Hub
             </span>
           </div>
-          <span className="chip text-xs" style={{ 
-            background: 'rgba(185,28,28,0.15)', 
+          <span className="chip text-xs" style={{
+            background: 'rgba(185,28,28,0.15)',
             color: 'var(--color-gold)',
             border: '1px solid rgba(185,28,28,0.3)'
           }}>
@@ -31,28 +37,43 @@ export default function App() {
 
       {/* Active Module */}
       <main>
-        <MembersModule />
+        {tab === 'members' && <MembersModule />}
+        {tab === 'videos'  && <VideosModule />}
       </main>
 
-      {/* Bottom nav placeholder for future modules */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t flex md:hidden" style={{
+      {/* Bottom nav */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t flex" style={{
         background: 'rgba(12,10,9,0.95)',
         backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
-        <button className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium"
-          style={{ color: 'var(--color-red)' }}>
+        <button
+          onClick={() => setTab('members')}
+          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
+          style={{ color: tab === 'members' ? 'var(--color-red)' : 'var(--color-muted)' }}
+        >
           <span className="text-lg">👥</span>
           Members
         </button>
-        {/* Future modules will be added here */}
-        <button className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
-          style={{ color: 'var(--color-muted)' }}>
+        <button
+          onClick={() => setTab('videos')}
+          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
+          style={{ color: tab === 'videos' ? 'var(--color-red)' : 'var(--color-muted)' }}
+        >
+          <span className="text-lg">🎬</span>
+          Videos
+        </button>
+        <button
+          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
+          style={{ color: 'var(--color-muted)' }}
+        >
           <span className="text-lg">📅</span>
           Events
         </button>
-        <button className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
-          style={{ color: 'var(--color-muted)' }}>
+        <button
+          className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs"
+          style={{ color: 'var(--color-muted)' }}
+        >
           <span className="text-lg">📌</span>
           Resources
         </button>
