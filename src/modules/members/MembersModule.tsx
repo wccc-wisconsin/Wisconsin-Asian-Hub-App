@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { useMembers, type SheetConfig } from '../../hooks/useMembers'
 import MemberCard from './components/MemberCard'
 import FilterBar from './components/FilterBar'
-import SheetConfig from './components/SheetConfig'
+import SheetConfigScreen from './components/SheetConfig'
 
 const STORAGE_KEY = 'wccc_sheet_config'
 
@@ -78,7 +78,7 @@ export default function MembersModule() {
     return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
   }, [filtered])
 
-  if (!config) return <SheetConfig onSave={handleSaveConfig} />
+  if (!config) return <SheetConfigScreen onSave={handleSaveConfig} />
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
