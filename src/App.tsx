@@ -15,7 +15,7 @@ const TABS = [
 ] as const
 
 export default function App() {
-  const [tab, setTab]             = useState<Tab>('members')
+  const [tab, setTab]             = useState<Tab>('videos')
   const [bubbleOpen, setBubbleOpen] = useState(false)
 
   const tabLabel = TABS.find(t => t.id === tab)
