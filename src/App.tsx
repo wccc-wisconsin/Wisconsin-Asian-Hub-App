@@ -4,7 +4,7 @@ import VideosModule  from './modules/videos/VideosModule'
 import BoardModule   from './modules/board/BoardModule'
 import ChatModule    from './modules/chat/ChatModule'
 import GivingModule  from './modules/giving/GivingModule'
-import DineModule    from './modules/dine/DineModule'
+import DineModule    from './modules/din/DineModule'
 import ChatWindow    from './modules/chat/components/ChatWindow'
 
 type Tab = 'videos' | 'dine' | 'members' | 'board' | 'giving' | 'chat'
