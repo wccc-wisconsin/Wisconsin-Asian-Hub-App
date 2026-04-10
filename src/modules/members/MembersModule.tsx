@@ -66,15 +66,6 @@ const [config, setConfig] = useState<SheetConfig | null>({
     })
   }, [members, city, category, search])
 
-  const groupedByCity = useMemo(() => {
-    const groups: Record<string, typeof filtered> = {}
-    for (const m of filtered) {
-      if (!groups[m.city]) groups[m.city] = []
-      groups[m.city].push(m)
-    }
-    return Object.entries(groups).sort(([a], [b]) => a.localeCompare(b))
-  }, [filtered])
-
   if (!config) return <SheetConfigScreen onSave={handleSaveConfig} />
 
   return (
