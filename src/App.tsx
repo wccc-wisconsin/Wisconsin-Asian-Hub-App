@@ -4,16 +4,18 @@ import VideosModule  from './modules/videos/VideosModule'
 import BoardModule   from './modules/board/BoardModule'
 import ChatModule    from './modules/chat/ChatModule'
 import GivingModule  from './modules/giving/GivingModule'
+import DineModule    from './modules/dine/DineModule'
 import ChatWindow    from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'members' | 'board' | 'giving' | 'chat'
+type Tab = 'videos' | 'dine' | 'members' | 'board' | 'giving' | 'chat'
 
 const TABS = [
-  { id: 'videos',   icon: '🎬', label: 'Videos'  },
-  { id: 'members',  icon: '👥', label: 'Members' },
-  { id: 'board',    icon: '📋', label: 'Board'   },
-  { id: 'giving',   icon: '🤝', label: 'Giving'  },
-  { id: 'chat',     icon: '🤖', label: 'Chat'    },
+  { id: 'videos',  icon: '🎬', label: 'Videos'  },
+  { id: 'dine',    icon: '🍜', label: 'Dine'    },
+  { id: 'members', icon: '👥', label: 'Members' },
+  { id: 'board',   icon: '📋', label: 'Board'   },
+  { id: 'giving',  icon: '🤝', label: 'Giving'  },
+  { id: 'chat',    icon: '🤖', label: 'Chat'    },
 ] as const
 
 export default function App() {
@@ -23,10 +25,8 @@ export default function App() {
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
-      {/* Header */}
       <header className="sticky top-0 z-50 border-b" style={{
-        background: 'rgba(12,10,9,0.92)',
-        backdropFilter: 'blur(12px)',
+        background: 'rgba(12,10,9,0.92)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -38,8 +38,7 @@ export default function App() {
             </span>
           </div>
           <span className="chip text-xs" style={{
-            background: 'rgba(185,28,28,0.15)',
-            color: 'var(--color-gold)',
+            background: 'rgba(185,28,28,0.15)', color: 'var(--color-gold)',
             border: '1px solid rgba(185,28,28,0.3)'
           }}>
             {tabLabel?.icon} {tabLabel?.label}
@@ -47,16 +46,16 @@ export default function App() {
         </div>
       </header>
 
-      {/* Active Module */}
       <main>
         {tab === 'videos'  && <VideosModule  />}
+        {tab === 'dine'    && <DineModule    />}
         {tab === 'members' && <MembersModule />}
         {tab === 'board'   && <BoardModule   />}
         {tab === 'giving'  && <GivingModule  />}
         {tab === 'chat'    && <ChatModule    />}
       </main>
 
-      {/* Floating chat bubble — visible on all tabs except chat */}
+      {/* Floating chat bubble */}
       {tab !== 'chat' && (
         <>
           <button
@@ -69,26 +68,23 @@ export default function App() {
               background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
               boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
               border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
-            }}
-          >
+            }}>
             {bubbleOpen ? '✕' : '🤖'}
           </button>
           {bubbleOpen && <ChatWindow onClose={() => setBubbleOpen(false)} />}
         </>
       )}
 
-      {/* Bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 border-t flex" style={{
-        background: 'rgba(12,10,9,0.95)',
-        backdropFilter: 'blur(12px)',
+      {/* Bottom nav — scrollable on mobile */}
+      <nav className="fixed bottom-0 left-0 right-0 border-t flex overflow-x-auto" style={{
+        background: 'rgba(12,10,9,0.95)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
         {TABS.map(t => (
           <button key={t.id}
             onClick={() => { setTab(t.id as Tab); setBubbleOpen(false) }}
-            className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
-            style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}
-          >
+            className="flex-shrink-0 flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors min-w-[60px]"
+            style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}>
             <span className="text-lg">{t.icon}</span>
             {t.label}
           </button>
