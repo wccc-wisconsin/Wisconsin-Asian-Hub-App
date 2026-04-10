@@ -1,25 +1,14 @@
 import type { DonationItem } from '../../../hooks/useGiving'
 
 const CATEGORY_ICONS: Record<string, string> = {
-  'Equipment & Tools': '🔧',
-  'Office Supplies': '📎',
-  'Furniture': '🪑',
-  'Technology / Electronics': '💻',
+  'Equipment & Tools': '🔧', 'Office Supplies': '📎',
+  'Furniture': '🪑', 'Technology / Electronics': '💻',
 }
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; border: string; label: string }> = {
-  available: {
-    bg: 'rgba(34,197,94,0.1)', color: '#22c55e',
-    border: 'rgba(34,197,94,0.3)', label: '✅ Available'
-  },
-  requested: {
-    bg: 'rgba(251,191,36,0.1)', color: '#fbbf24',
-    border: 'rgba(251,191,36,0.3)', label: '⏳ Requested'
-  },
-  matched: {
-    bg: 'rgba(156,163,175,0.1)', color: '#9ca3af',
-    border: 'rgba(156,163,175,0.2)', label: '🤝 Matched'
-  },
+  available: { bg: 'rgba(34,197,94,0.1)',   color: '#22c55e', border: 'rgba(34,197,94,0.3)',   label: '✅ Available' },
+  requested: { bg: 'rgba(251,191,36,0.1)',  color: '#fbbf24', border: 'rgba(251,191,36,0.3)',  label: '⏳ Requested' },
+  matched:   { bg: 'rgba(156,163,175,0.1)', color: '#9ca3af', border: 'rgba(156,163,175,0.2)', label: '🤝 Matched'   },
 }
 
 interface ItemCardProps {
@@ -46,9 +35,7 @@ export default function ItemCard({ item, onRequest }: ItemCardProps) {
               <h3 className="font-semibold text-sm leading-tight" style={{ color: 'var(--color-text)' }}>
                 {item.title}
               </h3>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
-                📍 {item.city}
-              </p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>📍 {item.city}</p>
             </div>
           </div>
           <span className="chip text-xs flex-shrink-0" style={{
@@ -58,32 +45,47 @@ export default function ItemCard({ item, onRequest }: ItemCardProps) {
           </span>
         </div>
 
-        {/* Category */}
+        {/* Category chip */}
         <span className="chip text-xs mb-3" style={{
-          background: 'rgba(185,28,28,0.1)',
-          color: 'var(--color-red)',
+          background: 'rgba(185,28,28,0.1)', color: 'var(--color-red)',
           border: '1px solid rgba(185,28,28,0.2)'
         }}>
           {item.category}
         </span>
 
         {/* Description */}
-        <p className="text-xs leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--color-muted)' }}>
+        <p className="text-xs leading-relaxed mb-3 line-clamp-2" style={{ color: 'var(--color-muted)' }}>
           {item.description}
         </p>
 
-        {/* Donor */}
-        <div className="flex items-center justify-between pt-3 border-t"
+        {/* Donor org — prominently shown */}
+        <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-lg" style={{
+          background: 'rgba(251,191,36,0.06)', border: '1px solid rgba(251,191,36,0.15)'
+        }}>
+          <span className="text-sm">🏢</span>
+          <div>
+            <p className="text-xs font-semibold" style={{ color: 'var(--color-gold)' }}>
+              {item.donorOrg}
+            </p>
+            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+              Contact: {item.donorName}
+            </p>
+          </div>
+        </div>
+
+        {/* Action */}
+        <div className="flex items-center justify-end pt-3 border-t"
           style={{ borderColor: 'var(--color-border)' }}>
-          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            Donated by <span style={{ color: 'var(--color-text)' }}>{item.donorName}</span>
-          </p>
-          {item.status === 'available' && (
+          {item.status === 'available' ? (
             <button onClick={onRequest}
               className="text-xs px-3 py-1.5 rounded-full font-semibold"
               style={{ background: 'var(--color-red)', color: '#fff' }}>
               Request →
             </button>
+          ) : (
+            <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
+              {item.status === 'requested' ? 'Under review' : 'Successfully matched'}
+            </span>
           )}
         </div>
       </div>
