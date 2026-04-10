@@ -3,21 +3,22 @@ import MembersModule from './modules/members/MembersModule'
 import VideosModule  from './modules/videos/VideosModule'
 import BoardModule   from './modules/board/BoardModule'
 import ChatModule    from './modules/chat/ChatModule'
+import GivingModule  from './modules/giving/GivingModule'
 import ChatWindow    from './modules/chat/components/ChatWindow'
 
-type Tab = 'members' | 'videos' | 'board' | 'chat'
+type Tab = 'videos' | 'members' | 'board' | 'giving' | 'chat'
 
 const TABS = [
-  { id: 'members', icon: '👥', label: 'Members' },
-  { id: 'videos',  icon: '🎬', label: 'Videos'  },
-  { id: 'board',   icon: '📋', label: 'Board'   },
-  { id: 'chat',    icon: '🤖', label: 'Chat'    },
+  { id: 'videos',   icon: '🎬', label: 'Videos'  },
+  { id: 'members',  icon: '👥', label: 'Members' },
+  { id: 'board',    icon: '📋', label: 'Board'   },
+  { id: 'giving',   icon: '🤝', label: 'Giving'  },
+  { id: 'chat',     icon: '🤖', label: 'Chat'    },
 ] as const
 
 export default function App() {
-  const [tab, setTab]             = useState<Tab>('videos')
+  const [tab, setTab]               = useState<Tab>('videos')
   const [bubbleOpen, setBubbleOpen] = useState(false)
-
   const tabLabel = TABS.find(t => t.id === tab)
 
   return (
@@ -31,9 +32,7 @@ export default function App() {
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-7 h-7 rounded-sm flex items-center justify-center text-sm font-bold"
-              style={{ background: 'var(--color-red)' }}>
-              亚
-            </div>
+              style={{ background: 'var(--color-red)' }}>亚</div>
             <span className="font-display font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>
               Wisconsin Asian Hub
             </span>
@@ -50,9 +49,10 @@ export default function App() {
 
       {/* Active Module */}
       <main>
-        {tab === 'members' && <MembersModule />}
         {tab === 'videos'  && <VideosModule  />}
+        {tab === 'members' && <MembersModule />}
         {tab === 'board'   && <BoardModule   />}
+        {tab === 'giving'  && <GivingModule  />}
         {tab === 'chat'    && <ChatModule    />}
       </main>
 
@@ -62,21 +62,18 @@ export default function App() {
           <button
             onClick={() => setBubbleOpen(o => !o)}
             className="fixed z-50 w-14 h-14 rounded-full flex items-center justify-center text-xl shadow-lg transition-transform active:scale-95"
-style={{
-  bottom: '5.5rem',
-  right: tab === 'board' ? 'auto' : '1.25rem',
-  left: tab === 'board' ? '1.25rem' : 'auto',
-  background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
-  boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
-  border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
-}}
+            style={{
+              bottom: '5.5rem',
+              right: tab === 'board' ? 'auto' : '1.25rem',
+              left: tab === 'board' ? '1.25rem' : 'auto',
+              background: bubbleOpen ? 'var(--color-surface)' : 'var(--color-red)',
+              boxShadow: '0 4px 20px rgba(185,28,28,0.4)',
+              border: bubbleOpen ? '1px solid var(--color-border)' : 'none',
+            }}
           >
             {bubbleOpen ? '✕' : '🤖'}
           </button>
-
-          {bubbleOpen && (
-            <ChatWindow onClose={() => setBubbleOpen(false)} />
-          )}
+          {bubbleOpen && <ChatWindow onClose={() => setBubbleOpen(false)} />}
         </>
       )}
 
@@ -87,8 +84,7 @@ style={{
         borderColor: 'var(--color-border)'
       }}>
         {TABS.map(t => (
-          <button
-            key={t.id}
+          <button key={t.id}
             onClick={() => { setTab(t.id as Tab); setBubbleOpen(false) }}
             className="flex-1 py-3 flex flex-col items-center gap-0.5 text-xs font-medium transition-colors"
             style={{ color: tab === t.id ? 'var(--color-red)' : 'var(--color-muted)' }}
