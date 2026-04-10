@@ -17,12 +17,12 @@ export interface Member {
 const COLUMN_MAP: Record<string, string> = {
   name: 'name', 'business name': 'name', organization: 'name', org: 'name', company: 'name',
   city: 'city', location: 'city', town: 'city',
-  category: 'category', type: 'category', industry: 'category', sector: 'category', 'business type': 'category',
+  category: 'category', type: 'category', industry: 'category', sector: 'category', 'business type': 'category', category_key: 'category',
   email: 'email', 'e-mail': 'email', 'contact email': 'email',
   phone: 'phone', telephone: 'phone', cell: 'phone', mobile: 'phone',
   website: 'website', url: 'website', web: 'website', site: 'website',
   photo: 'photo', image: 'photo', logo: 'photo', 'photo url': 'photo', 'image url': 'photo',
-  description: 'description', bio: 'description', about: 'description', details: 'description',
+  description: 'description', bio: 'description', about: 'description', details: 'description', desc_en: 'description',
 }
 
 function normalizeKey(raw: string): string {
