@@ -94,7 +94,7 @@ function AnthemPage() {
       <div style={{ background: 'linear-gradient(135deg, #0c2447 0%, #1a3a6b 50%, #1a5fa8 100%)', borderRadius: 20, padding: '3.5rem 2rem', textAlign: 'center', marginBottom: '2rem', marginTop: '1rem', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
         <div style={{ position: 'absolute', bottom: -60, left: -40, width: 240, height: 240, borderRadius: '50%', background: 'rgba(255,255,255,0.03)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 20, position: 'relative', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 20, position: 'relative', flexWrap: 'wrap' as const }}>
           <div style={{ padding: '7px 16px', borderRadius: 99, background: '#B91C1C', color: '#fff', fontSize: 13, fontWeight: 700 }}>亚 WCCC</div>
           <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 20 }}>×</span>
           <div style={{ padding: '7px 16px', borderRadius: 99, background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 13, fontWeight: 700, border: '1px solid rgba(255,255,255,0.25)' }}>Anthem</div>
@@ -145,7 +145,7 @@ function AnthemPage() {
               </div>
             ))}
           </div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' as const }}>
             <a href="#register" style={{ padding: '10px 22px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}>
               Reserve my spot →
             </a>
@@ -334,8 +334,8 @@ function AnthemPage() {
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
           Anthem representative Rita is available to answer your questions about the summit and ongoing programs — whether you're a WCCC member or not.
         </p>
-        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a h<a href="mailto:info@wisccc.org" style={{ padding: '10px 20px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>✉️ Contact WCCC</a>
+        <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' as const }}>
+          <a href="mailto:info@wisccc.org" style={{ padding: '10px 20px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>✉️ Contact WCCC</a>
           <a href="https://hub.wcccbusinessnetwork.org" style={{ padding: '10px 20px', borderRadius: 99, background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Visit WCCC Hub</a>
         </div>
       </div>
