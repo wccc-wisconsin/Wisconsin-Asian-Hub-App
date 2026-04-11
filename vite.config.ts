@@ -26,13 +26,15 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Never cache admin or anthem pages
+        navigateFallbackDenylist: [/^\/admin/, /^\/anthem/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/docs\.google\.com\/spreadsheets/,
             handler: 'StaleWhileRevalidate',
             options: {
               cacheName: 'google-sheets-cache',
-              expiration: { maxAgeSeconds: 60 * 60 } // 1 hour
+              expiration: { maxAgeSeconds: 60 * 60 }
             }
           }
         ]
