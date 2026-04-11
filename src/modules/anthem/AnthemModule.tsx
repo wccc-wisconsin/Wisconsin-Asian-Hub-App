@@ -330,9 +330,9 @@ function AnthemPage() {
 
       {/* Contact Rita */}
       <div style={{ background: '#B91C1C', borderRadius: 20, padding: '2rem', textAlign: 'center', marginBottom: '2rem' }}>
-        <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, color: '#fff', marginBottom: 8 }}>Have questions? Contact Rita</h2>
+        <h2 style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, color: '#fff', marginBottom: 8 }}>Have questions? </h2>
         <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>
-          Anthem representative Rita is available to answer your questions about the summit and ongoing programs — whether you're a WCCC member or not.
+          About the summit and ongoing programs — whether you're a WCCC member or not.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' as const }}>
           <a href="mailto:info@wisccc.org" style={{ padding: '10px 20px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>✉️ Contact WCCC</a>
