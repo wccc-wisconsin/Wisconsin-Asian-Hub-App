@@ -49,68 +49,73 @@ export function useFirestoreEvents() {
 }
 
 // ── Eventbrite API ───────────────────────────────────────────────────────────
+// Fetches events from WCCC's own Eventbrite organization
 export async function fetchEventbriteEvents(token: string): Promise<CommunityEvent[]> {
-  const keywords = ['Wisconsin Asian', 'Milwaukee Asian', 'WCCC Wisconsin', 'Asian Wisconsin']
   const results: CommunityEvent[] = []
-  const seen = new Set<string>()
 
-  for (const q of keywords) {
-    try {
-      const url = new URL('https://www.eventbriteapi.com/v3/events/search/')
-      url.searchParams.set('q', q)
-      url.searchParams.set('location.address', 'Wisconsin')
-      url.searchParams.set('location.within', '100mi')
-      url.searchParams.set('expand', 'venue,organizer')
-      url.searchParams.set('start_date.range_start', new Date().toISOString().slice(0, 19) + 'Z')
-      url.searchParams.set('sort_by', 'date')
-      url.searchParams.set('page_size', '20')
+  try {
+    // Get the current user's organization ID first
+    const meRes = await fetch('https://www.eventbriteapi.com/v3/users/me/organizations/', {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!meRes.ok) return []
 
-      const res = await fetch(url.toString(), {
-        headers: { Authorization: `Bearer ${token}` }
+    const meData = await meRes.json() as { organizations: { id: string }[] }
+    const orgId = meData.organizations?.[0]?.id
+    if (!orgId) return []
+
+    // Fetch events for this organization
+    const url = new URL(`https://www.eventbriteapi.com/v3/organizations/${orgId}/events/`)
+    url.searchParams.set('expand', 'venue,organizer,ticket_availability')
+    url.searchParams.set('status', 'live')
+    url.searchParams.set('order_by', 'start_asc')
+    url.searchParams.set('page_size', '50')
+
+    const res = await fetch(url.toString(), {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    if (!res.ok) return []
+
+    const data = await res.json() as {
+      events: {
+        id: string
+        name: { text: string }
+        description: { text: string }
+        start: { local: string }
+        end: { local: string }
+        url: string
+        logo?: { original?: { url: string } }
+        is_free: boolean
+        ticket_availability?: { minimum_ticket_price?: { display: string } }
+        venue?: { address?: { localized_address_display: string }; city?: string }
+        organizer?: { name: string }
+        online_event: boolean
+      }[]
+    }
+
+    for (const e of data.events ?? []) {
+      // Only show future events
+      if (new Date(e.start.local) < new Date()) continue
+      results.push({
+        id: `eb-${e.id}`,
+        title: e.name.text,
+        description: e.description?.text?.slice(0, 300) ?? '',
+        source: 'eventbrite',
+        format: e.online_event ? 'virtual' : 'in-person',
+        startDate: e.start.local,
+        endDate: e.end.local,
+        location: e.venue?.address?.localized_address_display ?? 'Wisconsin',
+        city: e.venue?.city ?? 'Wisconsin',
+        url: e.url,
+        imageUrl: e.logo?.original?.url,
+        isFree: e.is_free,
+        price: e.ticket_availability?.minimum_ticket_price?.display,
+        organizer: e.organizer?.name,
       })
-      if (!res.ok) continue
+    }
+  } catch { return [] }
 
-      const data = await res.json() as {
-        events: {
-          id: string
-          name: { text: string }
-          description: { text: string }
-          start: { local: string }
-          end: { local: string }
-          url: string
-          logo?: { url: string }
-          is_free: boolean
-          ticket_availability?: { minimum_ticket_price?: { display: string } }
-          venue?: { address?: { localized_address_display: string }; city?: string }
-          organizer?: { name: string }
-          online_event: boolean
-        }[]
-      }
-
-      for (const e of data.events ?? []) {
-        if (seen.has(e.id)) continue
-        seen.add(e.id)
-        results.push({
-          id: `eb-${e.id}`,
-          title: e.name.text,
-          description: e.description?.text?.slice(0, 300) ?? '',
-          source: 'eventbrite',
-          format: e.online_event ? 'virtual' : 'in-person',
-          startDate: e.start.local,
-          endDate: e.end.local,
-          location: e.venue?.address?.localized_address_display ?? 'Wisconsin',
-          city: e.venue?.city ?? 'Wisconsin',
-          url: e.url,
-          imageUrl: e.logo?.url,
-          isFree: e.is_free,
-          price: e.ticket_availability?.minimum_ticket_price?.display,
-          organizer: e.organizer?.name,
-        })
-      }
-    } catch { continue }
-  }
-
-  return results.sort((a, b) => a.startDate.localeCompare(b.startDate))
+  return results
 }
 
 // ── Add event (admin) ────────────────────────────────────────────────────────
