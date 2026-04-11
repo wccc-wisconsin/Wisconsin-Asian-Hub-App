@@ -115,7 +115,11 @@ export async function fetchEventbriteEvents(token: string): Promise<CommunityEve
 
 // ── Add event (admin) ────────────────────────────────────────────────────────
 export async function addEvent(data: Omit<CommunityEvent, 'id' | 'createdAt'>) {
-  await addDoc(collection(db, 'events'), { ...data, createdAt: serverTimestamp() })
+  const clean: Record<string, unknown> = {}
+  for (const [k, v] of Object.entries(data)) {
+    if (v !== undefined && v !== '') clean[k] = v
+  }
+  await addDoc(collection(db, 'events'), { ...clean, createdAt: serverTimestamp() })
 }
 
 // ── Group events by time period ──────────────────────────────────────────────
