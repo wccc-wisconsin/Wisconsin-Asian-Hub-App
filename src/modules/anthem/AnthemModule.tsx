@@ -305,7 +305,7 @@ function AnthemPage() {
               Reserve My Free Spot →
             </button>
             <p style={{ fontSize: 11, color: 'var(--color-muted)', textAlign: 'center', marginTop: 10 }}>
-              Your information is kept private and only shared with WCCC and summit partners.
+              Your information is kept private. Questions? Email us at info@wisccc.org
             </p>
           </form>
         )}
@@ -335,7 +335,7 @@ function AnthemPage() {
           Anthem representative Rita is available to answer your questions about the summit and ongoing programs — whether you're a WCCC member or not.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="mailto:rita@anthem.com" style={{ padding: '10px 20px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>✉️ Email Rita</a>
+          <a h<a href="mailto:info@wisccc.org" style={{ padding: '10px 20px', borderRadius: 99, background: '#fff', color: '#B91C1C', fontSize: 14, fontWeight: 600, textDecoration: 'none' }}>✉️ Contact WCCC</a>
           <a href="https://hub.wcccbusinessnetwork.org" style={{ padding: '10px 20px', borderRadius: 99, background: 'transparent', color: '#fff', fontSize: 14, fontWeight: 600, textDecoration: 'none', border: '1px solid rgba(255,255,255,0.4)' }}>Visit WCCC Hub</a>
         </div>
       </div>
