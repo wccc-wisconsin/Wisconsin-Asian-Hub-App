@@ -29,14 +29,20 @@ export default function SubmitEventForm({ onClose }: SubmitEventFormProps) {
     setError('')
     try {
       await addEvent({
-        title, description, source: 'community',
-        format, startDate, endDate,
-        location, city, url, isFree,
+        title,
+        description,
+        source: 'community',
+        format,
+        startDate,
+        endDate: endDate || undefined,
+        location,
+        city,
+        url: url || undefined,
+        isFree,
         price: isFree ? undefined : price,
         organizer,
-        // store contact info in description for admin review
-        // @ts-ignore
-        contactEmail, contactPhone,
+        contactEmail,
+        contactPhone: contactPhone || undefined,
         status: 'pending',
       })
       setDone(true)
