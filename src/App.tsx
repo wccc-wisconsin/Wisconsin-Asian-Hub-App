@@ -5,9 +5,10 @@ import BoardModule   from './modules/board/BoardModule'
 import ChatModule    from './modules/chat/ChatModule'
 import GivingModule  from './modules/giving/GivingModule'
 import DineModule    from './modules/din/DineModule'
+import EventsModule  from './modules/events/EventsModule'
 import ChatWindow    from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat'
+type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events'
 
 const TAB_META: Record<Tab, { icon: string; label: string }> = {
   videos:  { icon: '🎬', label: 'Videos'  },
@@ -18,7 +19,7 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
   chat:    { icon: '🤖', label: 'Chat'    },
 }
 
-const MORE_TABS: Tab[] = ['members', 'board', 'chat']
+const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
 
 export default function App() {
   const [tab, setTab]               = useState<Tab>('videos')
@@ -78,6 +79,7 @@ export default function App() {
         {tab === 'members' && <MembersModule />}
         {tab === 'board'   && <BoardModule   />}
         {tab === 'chat'    && <ChatModule    />}
+        {tab === 'events'  && <EventsModule  />}
       </main>
 
       {/* Floating chat bubble */}
