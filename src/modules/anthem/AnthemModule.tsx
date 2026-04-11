@@ -60,6 +60,17 @@ const PARTNERS = [
   { name: 'LegalShield', desc: 'Legal protection & planning', color: '#7c3aed' },
   { name: 'More TBA', desc: 'Additional partners coming soon', color: '#6b7280' },
 ]
+const WORKSHOPS = [
+  { date: 'June 2026 · Date TBD',     title: 'WCCC Financial & Wellness Summit',                       type: 'All Topics · Keynote Event',     location: 'Milwaukee, WI + Virtual', featured: true  },
+  { date: 'July 2026 · Date TBD',     title: 'Financial Planning for Individuals & Small Businesses',  type: 'Financial Planning',             location: 'Milwaukee, WI + Virtual', featured: false },
+  { date: 'August 2026 · Date TBD',   title: 'Legal Protection & Know Your Rights',                    type: 'Legal Protection',               location: 'Milwaukee, WI + Virtual', featured: false },
+  { date: 'September 2026 · Date TBD',title: 'Preventative Health Care for the Whole Family',          type: 'Preventative Health Care',       location: 'Milwaukee, WI + Virtual', featured: false },
+  { date: 'October 2026 · Date TBD',  title: 'Long-Term Care Planning 101',                            type: 'Long-Term Care Planning',        location: 'Milwaukee, WI + Virtual', featured: false },
+  { date: 'November 2026 · Date TBD', title: 'Year-End Financial Review & Insurance Check-Up',         type: 'Financial Planning',             location: 'Milwaukee, WI + Virtual', featured: false },
+  { date: 'December 2026 · Date TBD', title: 'Year-End Wellness Review & 2027 Planning',               type: 'Health & Wellness',              location: 'Milwaukee, WI + Virtual', featured: false },
+]
+
+
 
 function AnthemPage() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', program: '', member: '', message: '' })
@@ -179,6 +190,38 @@ function AnthemPage() {
               <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 8 }}>{p.title}</h3>
               <p style={{ fontSize: 12, color: 'var(--color-muted)', lineHeight: 1.6, marginBottom: 10 }}>{p.desc}</p>
               <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99, background: `${p.color}18`, color: p.color }}>{p.tag}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Workshops */}
+      <div style={{ marginBottom: '2.5rem' }}>
+        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.1em', color: 'var(--color-muted)', textTransform: 'uppercase', marginBottom: 6 }}>Schedule</p>
+        <p style={{ fontFamily: '"Playfair Display", serif', fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 8 }}>7 Events · June – December 2026</p>
+        <p style={{ fontSize: 14, color: 'var(--color-muted)', lineHeight: 1.7, marginBottom: '1.25rem' }}>
+          All events are hybrid — in-person in Milwaukee and available virtually statewide. Exact dates to be confirmed. Register below to be notified.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 10 }}>
+          {WORKSHOPS.map((w, i) => (
+            <div key={i} style={{ background: w.featured ? 'rgba(185,28,28,0.04)' : 'var(--color-surface)', border: w.featured ? '1px solid rgba(185,28,28,0.35)' : '1px solid var(--color-border)', borderRadius: 16, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 14 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: w.featured ? 'rgba(185,28,28,0.12)' : '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20 }}>
+                {w.featured ? '⭐' : '📅'}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, color: w.featured ? '#B91C1C' : '#1a5fa8', fontWeight: 600, marginBottom: 3 }}>{w.type}</div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 5, lineHeight: 1.3 }}>{w.title}</div>
+                <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' as const }}>
+                  <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>📅 {w.date}</span>
+                  <span style={{ fontSize: 11, color: 'var(--color-muted)' }}>📍 {w.location}</span>
+                  <span style={{ fontSize: 11, color: '#0F6E56', fontWeight: 500 }}>💻 Hybrid</span>
+                </div>
+              </div>
+              <div style={{ flexShrink: 0 }}>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: '4px 12px', borderRadius: 99, background: w.featured ? 'rgba(185,28,28,0.1)' : 'rgba(251,191,36,0.15)', color: w.featured ? '#B91C1C' : '#92400e', whiteSpace: 'nowrap' as const }}>
+                  {w.featured ? '🌟 Keynote' : 'Coming soon'}
+                </span>
+              </div>
             </div>
           ))}
         </div>
