@@ -16,9 +16,8 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
   giving:  { icon: '🤝', label: 'Giving'  },
   members: { icon: '👥', label: 'Members' },
   board:   { icon: '📋', label: 'Board'   },
-chat:    { icon: '🤖', label: 'Chat'    },
-    events:  { icon: '📅', label: 'Events'  },
-  }
+  chat:    { icon: '🤖', label: 'Chat'    },
+  events:  { icon: '📅', label: 'Events'  },
 }
 
 const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
