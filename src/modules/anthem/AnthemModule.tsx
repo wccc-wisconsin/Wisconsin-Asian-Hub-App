@@ -99,7 +99,7 @@ function AnthemPage() {
           Financial planning, legal protection, preventative care, and long-term wellness — open to <strong style={{ color: '#fff' }}>everyone</strong> in Wisconsin.
         </p>
         <p style={{ color: 'rgba(255,255,255,0.55)', fontSize: 13, marginBottom: 24, position: 'relative' }}>
-          No membership required · 100% free · In-person & virtual
+          No membership required · 100% free · Milwaukee, WI
         </p>
         <a href="#register" style={{ display: 'inline-block', background: '#fff', color: '#0c2447', padding: '10px 24px', borderRadius: 99, fontSize: 14, fontWeight: 600, textDecoration: 'none', position: 'relative' }}>
           Register for free →
@@ -125,9 +125,8 @@ function AnthemPage() {
             {[
               { icon: '📅', label: 'June 2026 · Date TBD' },
               { icon: '🕕', label: '6:00 PM – 9:00 PM' },
-{ icon: '📍', label: 'Milwaukee, WI + Virtual' },
-{ icon: '💻', label: 'In-Person & Online' },
-{ icon: '🎟️', label: 'Free Admission' },
+              { icon: '📍', label: 'Milwaukee, WI' },
+              { icon: '🎟️', label: 'Free Admission' },
             ].map(d => (
               <div key={d.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 <span style={{ fontSize: 14 }}>{d.icon}</span>
