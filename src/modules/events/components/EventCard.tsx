@@ -87,38 +87,30 @@ export default function EventCard({ event }: EventCardProps) {
             <div className="absolute inset-0" style={{
               background: 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)'
             }} />
-            <div className="absolute top-2 left-2">
-              <span className="chip text-xs font-semibold" style={{
-                background: src.bg, color: src.color, border: '1px solid ' + src.border,
-                backdropFilter: 'blur(4px)'
-              }}>{src.label}</span>
-            </div>
           </div>
         )}
 
         <div className="p-4">
-          {!event.imageUrl && (
-            <span className="chip text-xs font-semibold mb-2 inline-block" style={{
-              background: src.bg, color: src.color, border: '1px solid ' + src.border
-            }}>{src.label}</span>
-          )}
-
-          {/* Flag banner */}
+          {/* Flag banners */}
           {e.flag && (
-            <div className="rounded-lg px-3 py-2 mb-3 flex items-center gap-2" style={{
-              background: e.flag === 'wccc' ? 'rgba(185,28,28,0.1)' : e.flag === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
-              border: '1px solid ' + (e.flag === 'wccc' ? 'rgba(185,28,28,0.3)' : e.flag === 'featured' ? 'rgba(251,191,36,0.3)' : 'rgba(29,78,216,0.3)'),
-            }}>
-              <span className="text-sm">
-                {e.flag === 'wccc' ? '🔴' : e.flag === 'featured' ? '⭐' : '🤝'}
-              </span>
-              <span className="text-xs font-semibold" style={{
-                color: e.flag === 'wccc' ? 'var(--color-red)' : e.flag === 'featured' ? 'var(--color-gold)' : '#1d4ed8'
-              }}>
-                {e.flag === 'wccc' ? 'Official WCCC Event' :
-                 e.flag === 'featured' ? 'Featured Event' :
-                 'Partner Event' + (e.partnerName ? ' · ' + e.partnerName : '')}
-              </span>
+            <div className="flex flex-col gap-1.5 mb-3">
+              {(Array.isArray(e.flag) ? e.flag : [e.flag]).map((f: string) => (
+                <div key={f} className="rounded-lg px-3 py-2 flex items-center gap-2" style={{
+                  background: f === 'wccc' ? 'rgba(185,28,28,0.1)' : f === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
+                  border: '1px solid ' + (f === 'wccc' ? 'rgba(185,28,28,0.3)' : f === 'featured' ? 'rgba(251,191,36,0.3)' : 'rgba(29,78,216,0.3)'),
+                }}>
+                  <span className="text-sm">
+                    {f === 'wccc' ? '🔴' : f === 'featured' ? '⭐' : '🤝'}
+                  </span>
+                  <span className="text-xs font-semibold" style={{
+                    color: f === 'wccc' ? 'var(--color-red)' : f === 'featured' ? 'var(--color-gold)' : '#1d4ed8'
+                  }}>
+                    {f === 'wccc' ? 'Official WCCC Event' :
+                     f === 'featured' ? 'Featured Event' :
+                     'Partner Event' + (e.partnerName ? ' · ' + e.partnerName : '')}
+                  </span>
+                </div>
+              ))}
             </div>
           )}
 
@@ -183,7 +175,7 @@ export default function EventCard({ event }: EventCardProps) {
             {event.url && (
               <a href={event.url} target="_blank" rel="noopener noreferrer"
                 className="flex-1 text-center text-xs font-semibold py-2 rounded-lg"
-                style={{ background: src.bg, color: src.color, border: '1px solid ' + src.border }}>
+                style={{ background: 'rgba(185,28,28,0.08)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.2)' }}>
                 📋 View Event →
               </a>
             )}
