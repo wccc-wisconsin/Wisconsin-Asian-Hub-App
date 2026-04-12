@@ -21,7 +21,7 @@ function PhotoArea({ restaurant }: { restaurant: Restaurant }) {
     return (
       <div
         className="w-full flex items-center justify-center text-4xl"
-        style={{ height: 120, background: 'var(--color-bg)' }}
+        style={{ height: 160, background: 'var(--color-bg)' }}
       >
         {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
       </div>
@@ -31,7 +31,7 @@ function PhotoArea({ restaurant }: { restaurant: Restaurant }) {
   return (
     <div
       className="w-full flex items-center justify-center"
-      style={{ height: 120, background: 'var(--color-bg)', overflow: 'hidden' }}
+      style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
     >
       <img
         src={restaurant.photoUrl}
