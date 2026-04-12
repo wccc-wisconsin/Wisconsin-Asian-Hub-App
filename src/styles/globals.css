@@ -4,13 +4,25 @@
 
 @layer base {
   :root {
-    --color-bg: #1a1714;
-    --color-surface: #1a1412;
-    --color-border: #2d2420;
-    --color-red: #B91C1C;
-    --color-gold: #FBBF24;
-    --color-text: #f5f0eb;
-    --color-muted: #9a8f87;
+    --color-bg:      #1a1714;
+    --color-surface: #241e1b;
+    --color-border:  #2d2420;
+    --color-red:     #B91C1C;
+    --color-gold:    #FBBF24;
+    --color-text:    #f5f0eb;
+    --color-muted:   #9a8f87;
+  }
+
+  @media (prefers-color-scheme: light) {
+    :root {
+      --color-bg:      #faf9f7;
+      --color-surface: #ffffff;
+      --color-border:  #e5e0db;
+      --color-red:     #B91C1C;
+      --color-gold:    #92680a;
+      --color-text:    #1c1917;
+      --color-muted:   #78716c;
+    }
   }
 
   * { box-sizing: border-box; }
@@ -29,9 +41,14 @@
 
 @layer utilities {
   .skeleton {
-    background: linear-gradient(90deg, #1a1412 25%, #2d2420 50%, #1a1412 75%);
+    background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
   }
 
   .card-hover {
@@ -45,10 +62,4 @@
   .chip {
     @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
   }
-
-  @layer base {
-  html {
-    overflow-x: hidden;
-  }
-}
 }
