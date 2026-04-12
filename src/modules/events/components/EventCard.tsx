@@ -4,13 +4,6 @@ import AttendeeList from './AttendeeList'
 import RSVPForm from './RSVPForm'
 import EventComments from './EventComments'
 
-const SOURCE_STYLES = {
-  wccc:       { bg: 'rgba(185,28,28,0.12)',  color: 'var(--color-red)',  border: 'rgba(185,28,28,0.3)',  label: '🔴 WCCC'       },
-  wedc:       { bg: 'rgba(29,78,216,0.12)',  color: '#1d4ed8',           border: 'rgba(29,78,216,0.3)',  label: '🏛️ WEDC'       },
-  eventbrite: { bg: 'rgba(243,115,53,0.12)', color: '#f37335',           border: 'rgba(243,115,53,0.3)', label: '🎟️ Eventbrite' },
-  community:  { bg: 'rgba(22,163,74,0.12)',  color: '#16a34a',           border: 'rgba(22,163,74,0.3)',  label: '🌏 Community'  },
-}
-
 const FORMAT_LABELS: Record<string, string> = {
   'in-person': '📍 In-Person',
   'virtual':   '💻 Virtual',
@@ -71,7 +64,6 @@ export default function EventCard({ event }: EventCardProps) {
   const [rsvping, setRsvping] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const e = event as EventWithExtras
-  const src = SOURCE_STYLES[event.source] ?? SOURCE_STYLES.community
 
   return (
     <>
