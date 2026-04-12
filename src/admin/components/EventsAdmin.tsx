@@ -62,8 +62,14 @@ export default function EventsAdmin() {
     await deleteDoc(doc(db, 'events', id))
   }
 
-  async function updateFlag(id: string, flag: string) {
-    await updateDoc(doc(db, 'events', id), { flag: flag || null })
+  async function updateFlag(id: string, flag: string, checked: boolean) {
+    const event = events.find(ev => ev.id === id)
+    const current = event?.flag
+    const currentArr: string[] = Array.isArray(current) ? current : (current ? [current] : [])
+    const updated = checked
+      ? [...new Set([...currentArr, flag])]
+      : currentArr.filter(f => f !== flag)
+    await updateDoc(doc(db, 'events', id), { flag: updated.length ? updated : null })
   }
 
   async function updateCategory(id: string, category: string, checked: boolean) {
@@ -164,15 +170,15 @@ export default function EventsAdmin() {
                 }}>
                   {e.status ?? 'pending'}
                 </span>
-                {e.flag && (
-                  <span className="chip text-xs" style={{
-                    background: e.flag === 'wccc' ? 'rgba(185,28,28,0.1)' : e.flag === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
-                    color: e.flag === 'wccc' ? 'var(--color-red)' : e.flag === 'featured' ? 'var(--color-gold)' : '#1d4ed8',
+                {e.flag && (Array.isArray(e.flag) ? e.flag : [e.flag]).map((f: string) => (
+                  <span key={f} className="chip text-xs" style={{
+                    background: f === 'wccc' ? 'rgba(185,28,28,0.1)' : f === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
+                    color: f === 'wccc' ? 'var(--color-red)' : f === 'featured' ? 'var(--color-gold)' : '#1d4ed8',
                     border: '1px solid transparent'
                   }}>
-                    {e.flag === 'wccc' ? '🔴 WCCC Official' : e.flag === 'featured' ? '⭐ Featured' : '🤝 Partner'}
+                    {f === 'wccc' ? '🔴 WCCC' : f === 'featured' ? '⭐ Featured' : '🤝 Partner'}
                   </span>
-                )}
+                ))}
                 <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
                   {timeAgo(e.createdAt ?? null)}
                 </span>
