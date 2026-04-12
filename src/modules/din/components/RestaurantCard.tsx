@@ -196,17 +196,17 @@ style={{
               📞 Call
             </a>
           )}
-          {url && (
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
-              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
-            >
-              🌐 Visit
-            </a>
-          )}
+{restaurant.address && (
+  
+    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(restaurant.address + ', ' + restaurant.city + ', WI')}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
+    style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+  >
+    🗺️ Directions
+  </a>
+)}
           <button
             onClick={onShare}
             className="flex-1 py-2 rounded-lg text-xs font-medium"
