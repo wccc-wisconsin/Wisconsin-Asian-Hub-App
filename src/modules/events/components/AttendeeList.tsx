@@ -30,7 +30,15 @@ export default function AttendeeList({ eventId, onRSVP }: AttendeeListProps) {
   const remaining  = publicAttendees.length - 5
   const privateCount = attendees.filter(a => a.privacy === 'private').length
 
-  if (loading) return null
+  if (loading) return (
+    <div className="pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
+      <button onClick={onRSVP}
+        className="w-full py-2.5 rounded-xl text-sm font-semibold"
+        style={{ background: 'var(--color-red)', color: '#fff' }}>
+        🎟️ RSVP for this event
+      </button>
+    </div>
+  )
   if (total === 0) return (
     <div className="pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
       <button onClick={onRSVP}
