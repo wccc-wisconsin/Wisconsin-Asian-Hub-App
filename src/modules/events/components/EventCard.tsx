@@ -69,6 +69,7 @@ interface EventCardProps { event: CommunityEvent }
 
 export default function EventCard({ event }: EventCardProps) {
   const [rsvping, setRsvping] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const e = event as EventWithExtras
   const src = SOURCE_STYLES[event.source] ?? SOURCE_STYLES.community
 
@@ -127,9 +128,8 @@ export default function EventCard({ event }: EventCardProps) {
           </h3>
 
           <div className="space-y-1 mb-3">
-<div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-gold)' }}>
-              <span>📅</span>
-              <span>{formatDate(event.startDate)}{event.endDate ? ` – ${formatDate(event.endDate)}` : ''}</span>
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-gold)' }}>
+              <span>📅</span><span>{formatDate(event.startDate)}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-muted)' }}>
               <span>📍</span><span className="truncate">{event.location}</span>
@@ -158,9 +158,24 @@ export default function EventCard({ event }: EventCardProps) {
           </div>
 
           {event.description && (
-            <p className="text-xs leading-relaxed line-clamp-2 mb-3" style={{ color: 'var(--color-muted)' }}>
-              {event.description}
-            </p>
+            <div className="mb-3">
+              <p className="text-xs leading-relaxed" style={{
+                color: 'var(--color-muted)',
+                display: '-webkit-box',
+                WebkitLineClamp: expanded ? 'unset' : 3,
+                WebkitBoxOrient: 'vertical' as const,
+                overflow: expanded ? 'visible' : 'hidden'
+              }}>
+                {event.description}
+              </p>
+              {event.description.length > 120 && (
+                <button onClick={() => setExpanded(e => !e)}
+                  className="text-xs mt-1"
+                  style={{ color: 'var(--color-red)' }}>
+                  {expanded ? 'Show less ↑' : 'Read more ↓'}
+                </button>
+              )}
+            </div>
           )}
 
           {/* Actions */}
