@@ -1,8 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent, type EventSource, type EventFormat } from '../../hooks/useEvents'
+import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent, type EventSource } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
-import DiscoverEvents from './components/DiscoverEvents'
 
 const EB_TOKEN = import.meta.env.VITE_EVENTBRITE_TOKEN ?? ''
 
@@ -20,10 +19,6 @@ function SkeletonCard() {
         <div className="h-7 rounded skeleton w-full" />
       </div>
 
-      {/* AI Discovery section */}
-      <div className="px-4">
-        <DiscoverEvents />
-      </div>
     </div>
   )
 }
@@ -208,10 +203,6 @@ export default function EventsModule() {
         ))}
       </div>
 
-      {/* AI Discovery section */}
-      <div className="px-4">
-        <DiscoverEvents />
-      </div>
     </div>
   )
 }
