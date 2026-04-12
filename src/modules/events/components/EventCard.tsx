@@ -113,7 +113,8 @@ export default function EventCard({ event }: EventCardProps) {
 
           <div className="space-y-1 mb-3">
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-gold)' }}>
-              <span>📅</span><span>{formatDate(event.startDate)}</span>
+              <span>📅</span>
+              <span>{formatDate(event.startDate)}{event.endDate ? ' – ' + formatDate(event.endDate) : ''}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-muted)' }}>
               <span>📍</span><span className="truncate">{event.location}</span>
@@ -143,7 +144,13 @@ export default function EventCard({ event }: EventCardProps) {
 
           {event.description && (
             <div className="mb-3">
-              <p className="text-xs leading-relaxed" style={{
+              <p ref={(el) => {
+                if (el) {
+                  const isClamped = el.scrollHeight > el.clientHeight
+                  const btn = el.nextElementSibling as HTMLButtonElement | null
+                  if (btn && !expanded) btn.style.display = isClamped ? 'block' : 'none'
+                }
+              }} className="text-xs leading-relaxed" style={{
                 color: 'var(--color-muted)',
                 display: '-webkit-box',
                 WebkitLineClamp: expanded ? 'unset' : 3,
@@ -152,13 +159,11 @@ export default function EventCard({ event }: EventCardProps) {
               }}>
                 {event.description}
               </p>
-              {event.description.length > 120 && (
-                <button onClick={() => setExpanded(e => !e)}
-                  className="text-xs mt-1"
-                  style={{ color: 'var(--color-red)' }}>
-                  {expanded ? 'Show less ↑' : 'Read more ↓'}
-                </button>
-              )}
+              <button onClick={() => setExpanded(e => !e)}
+                className="text-xs mt-1"
+                style={{ color: 'var(--color-red)', display: expanded ? 'block' : 'none' }}>
+                {expanded ? 'Show less ↑' : 'Read more ↓'}
+              </button>
             </div>
           )}
 
