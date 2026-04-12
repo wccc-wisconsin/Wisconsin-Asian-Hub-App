@@ -1,11 +1,17 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
-  "trailingSlash": false,
-  "rewrites": [
-    { "source": "/admin", "destination": "/index.html" },
-    { "source": "/anthem", "destination": "/index.html" },
-    { "source": "/admin/:path*", "destination": "/index.html" }
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
+  "routes": [
+    { "src": "/api/chat", "dest": "/api/chat.ts" },
+    { "src": "/api/places", "dest": "/api/places.ts" },
+    { "src": "^/(.*)", "dest": "/index.html" }
   ]
 }
