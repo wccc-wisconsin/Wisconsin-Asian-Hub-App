@@ -64,6 +64,32 @@ export default function EventCard({ event }: EventCardProps) {
             }}>{src.label}</span>
           )}
 
+          {/* Flag banner */}
+          {(event as CommunityEvent & { flag?: string; partnerName?: string }).flag && (
+            <div className="rounded-lg px-3 py-2 mb-3 flex items-center gap-2" style={{
+              background: (event as CommunityEvent & { flag?: string }).flag === 'wccc'
+                ? 'rgba(185,28,28,0.1)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
+                ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
+              border: `1px solid ${(event as CommunityEvent & { flag?: string }).flag === 'wccc'
+                ? 'rgba(185,28,28,0.3)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
+                ? 'rgba(251,191,36,0.3)' : 'rgba(29,78,216,0.3)'}`,
+            }}>
+              <span className="text-sm">
+                {(event as CommunityEvent & { flag?: string }).flag === 'wccc' ? '🔴' :
+                 (event as CommunityEvent & { flag?: string }).flag === 'featured' ? '⭐' : '🤝'}
+              </span>
+              <span className="text-xs font-semibold" style={{
+                color: (event as CommunityEvent & { flag?: string }).flag === 'wccc'
+                  ? 'var(--color-red)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
+                  ? 'var(--color-gold)' : '#1d4ed8'
+              }}>
+                {(event as CommunityEvent & { flag?: string }).flag === 'wccc' ? 'Official WCCC Event' :
+                 (event as CommunityEvent & { flag?: string }).flag === 'featured' ? 'Featured Event' :
+                 `Partner Event${(event as CommunityEvent & { partnerName?: string }).partnerName ? ` · ${(event as CommunityEvent & { partnerName?: string }).partnerName}` : ''}`}
+              </span>
+            </div>
+          )}
+
           <h3 className="font-display font-semibold text-sm leading-snug mb-2"
             style={{ color: 'var(--color-text)' }}>
             {event.title}
