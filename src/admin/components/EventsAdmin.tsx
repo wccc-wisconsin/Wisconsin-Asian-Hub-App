@@ -8,6 +8,7 @@ type EventWithExtras = CommunityEvent & {
   contactPhone?: string
   flag?: string
   partnerName?: string
+  category?: string[]
   status?: string
   createdAt?: { toDate: () => Date; toMillis: () => number } | null
 }
@@ -66,8 +67,8 @@ export default function EventsAdmin() {
   }
 
   async function updateCategory(id: string, category: string, checked: boolean) {
-    const event = events.find(e => e.id === id)
-    const current: string[] = (event as Record<string,unknown>).category as string[] ?? []
+    const event = events.find(ev => ev.id === id)
+    const current: string[] = (event?.category ?? []) as string[]
     const updated = checked
       ? [...new Set([...current, category])]
       : current.filter(c => c !== category)
@@ -223,7 +224,7 @@ export default function EventsAdmin() {
             <div className="flex gap-2 flex-wrap items-center">
               <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Categories:</span>
               {(['networking', 'business', 'community'] as const).map(cat => {
-                const cats = ((e as Record<string,unknown>).category as string[]) ?? []
+                const cats = (e.category ?? []) as string[]
                 return (
                   <label key={cat} className="flex items-center gap-1 cursor-pointer text-xs"
                     style={{ color: 'var(--color-muted)' }}>
