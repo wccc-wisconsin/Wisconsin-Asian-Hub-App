@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Restaurant } from '../../../hooks/useDine'
 
 const CUISINE_ICONS: Record<string, string> = {
@@ -17,6 +18,7 @@ interface RestaurantCardProps {
 
 export default function RestaurantCard({ restaurant, onShare }: RestaurantCardProps) {
   const isWCCC = restaurant.affiliation === 'wccc'
+  const [expanded, setExpanded] = useState(false)
 
   return (
     <article
@@ -108,19 +110,29 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
           </div>
         )}
 
+        {/* Description with expand/collapse */}
         {restaurant.description && (
-          <p
-            className="text-xs"
-            style={{
-              color: 'var(--color-muted)',
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-            }}
-          >
-            {restaurant.description}
-          </p>
+          <div>
+            <p
+              className="text-xs"
+              style={{
+                color: 'var(--color-muted)',
+                display: '-webkit-box',
+                WebkitLineClamp: expanded ? 'unset' : 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: expanded ? 'visible' : 'hidden',
+              }}
+            >
+              {restaurant.description}
+            </p>
+            <button
+              onClick={() => setExpanded(e => !e)}
+              className="text-xs mt-1 font-medium"
+              style={{ color: 'var(--color-red)' }}
+            >
+              {expanded ? 'Show less ↑' : 'Read more ↓'}
+            </button>
+          </div>
         )}
 
         {/* Actions */}
@@ -134,10 +146,21 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
               📞 Call
             </a>
           )}
+          {restaurant.website && (
+            <a
+              href={restaurant.website.startsWith('http') ? restaurant.website : `https://${restaurant.website}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
+              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+            >
+              🌐 Visit
+            </a>
+          )}
           <button
             onClick={onShare}
             className="flex-1 py-2 rounded-lg text-xs font-medium"
-            style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+            style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}
           >
             📤 Share
           </button>
