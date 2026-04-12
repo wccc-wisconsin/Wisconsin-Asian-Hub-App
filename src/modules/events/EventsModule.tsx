@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent, type EventSource, type EventFormat } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
+import DiscoverEvents from './components/DiscoverEvents'
 
 const EB_TOKEN = import.meta.env.VITE_EVENTBRITE_TOKEN ?? ''
 
@@ -17,6 +18,11 @@ function SkeletonCard() {
         <div className="h-2 rounded skeleton w-1/2" />
         <div className="h-2 rounded skeleton w-2/3" />
         <div className="h-7 rounded skeleton w-full" />
+      </div>
+
+      {/* AI Discovery section */}
+      <div className="px-4">
+        <DiscoverEvents />
       </div>
     </div>
   )
@@ -53,20 +59,30 @@ export default function EventsModule() {
     const q = search.toLowerCase()
     return allEvents.filter(e => {
       if (source !== 'all' && e.source !== source) return false
-      if (format !== 'all' && e.format !== format) return false
+      if (format !== 'all' && !(
+        e.format === format ||
+        (e.description?.toLowerCase().includes(format) ?? false) ||
+        (e.title?.toLowerCase().includes(format) ?? false) ||
+        (format === 'networking' && (e.title?.toLowerCase().includes('network') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('connect'))) ||
+        (format === 'business' && (e.title?.toLowerCase().includes('business') || e.title?.toLowerCase().includes('professional') || e.title?.toLowerCase().includes('entrepreneur'))) ||
+        (format === 'community' && (e.title?.toLowerCase().includes('community') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('cultural') || e.source === 'community'))
+      )) return false
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
   }, [allEvents, source, format, search])
 
-  const grouped = useMemo(() => groupEventsByPeriod(filtered), [filtered])
+  const sorted = useMemo(() => {
+    const flagged = filtered.filter(e => (e as CommunityEvent & { flag?: string }).flag)
+    const rest = filtered.filter(e => !(e as CommunityEvent & { flag?: string }).flag)
+    return [...flagged, ...rest]
+  }, [filtered])
+  const grouped = useMemo(() => groupEventsByPeriod(sorted), [sorted])
 
   const sourceOptions: { value: FilterSource; label: string }[] = [
-    { value: 'all',        label: '🗂 All'         },
-    { value: 'wccc',       label: '🔴 WCCC'        },
-    { value: 'wedc',       label: '🏛️ WEDC'        },
-    { value: 'eventbrite', label: '🎟️ Eventbrite'  },
-    { value: 'community',  label: '🌏 Community'   },
+    { value: 'all',        label: '🗂 All'          },
+    { value: 'wccc',       label: '🔴 WCCC'         },
+    { value: 'eventbrite', label: '🎟️ Eventbrite'   },
   ]
 
   return (
@@ -123,9 +139,14 @@ export default function EventsModule() {
           ))}
         </div>
 
-        {/* Format filter */}
-        <div className="flex gap-2">
-          {([['all', '🗂 All'], ['in-person', '📍 In-Person'], ['virtual', '💻 Virtual'], ['hybrid', '🔀 Hybrid']] as const).map(([val, label]) => (
+        {/* Category filter */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {([
+            ['all',         '🗂 All'],
+            ['networking',  '🤝 Networking'],
+            ['business',    '💼 Business'],
+            ['community',   '🌏 Community Mixer'],
+          ] as const).map(([val, label]) => (
             <button key={val} onClick={() => setFormat(val as FilterFormat)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
               style={{
@@ -185,6 +206,11 @@ export default function EventsModule() {
             </div>
           </section>
         ))}
+      </div>
+
+      {/* AI Discovery section */}
+      <div className="px-4">
+        <DiscoverEvents />
       </div>
     </div>
   )
