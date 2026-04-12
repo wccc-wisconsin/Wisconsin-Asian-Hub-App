@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore'
+import { collection, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, Timestamp, where, getDocs } from 'firebase/firestore'
+import { deleteEventComment } from '../../hooks/useEventComments'
 import { db } from '../../lib/firebase'
 import type { CommunityEvent } from '../../hooks/useEvents'
 
@@ -55,6 +56,26 @@ export default function EventsAdmin() {
   const SOURCE_COLORS: Record<string, string> = {
     wccc: 'var(--color-red)', wedc: '#1d4ed8',
     eventbrite: '#f37335', community: '#16a34a'
+  }
+
+  async function exportAttendees(eventId: string, eventTitle: string) {
+    const snap = await getDocs(
+      query(collection(db, 'attendees'), where('eventId', '==', eventId), orderBy('createdAt', 'asc'))
+    )
+    if (snap.empty) { alert('No attendees yet for this event.'); return }
+    const rows = [['Name', 'Email', 'Phone', 'City', 'Privacy', 'Registered']]
+    snap.docs.forEach(d => {
+      const a = d.data()
+      rows.push([a.name, a.email, a.phone ?? '', a.city ?? '', a.privacy, a.createdAt?.toDate().toLocaleString() ?? ''])
+    })
+    const csv = rows.map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `attendees-${eventTitle.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   return (
@@ -176,6 +197,11 @@ export default function EventsAdmin() {
                 🔗 View link
               </a>
             )}
+            <button onClick={() => exportAttendees(e.id, e.title)}
+              className="text-xs px-3 py-1.5 rounded-full"
+              style={{ background: 'rgba(29,78,216,0.1)', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.2)' }}>
+              📥 Attendees
+            </button>
             <button onClick={() => reject(e.id)}
               className="text-xs px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
