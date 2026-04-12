@@ -156,7 +156,6 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
     }
   }
 
-  const wasExtracted = (val: string | undefined) => val && extracted[val as keyof ExtractedEvent]
   const isMissing = (val: string) => !val.trim()
 
   // ── Done ─────────────────────────────────────────────────────────────────
@@ -293,7 +292,7 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
               </label>
               <input type="text" placeholder="Event title *" value={title}
                 onChange={e => setTitle(e.target.value)}
-                style={extracted.title ? inpAI : isMissing(title) ? inpMissing : inp} />
+                style={'title' in extracted ? inpAI : isMissing(title) ? inpMissing : inp} />
             </div>
 
             {/* Description */}
@@ -312,13 +311,13 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
                 </label>
                 <input type="datetime-local" value={startDate}
                   onChange={e => setStart(e.target.value)}
-                  style={extracted.startDate ? inpAI : isMissing(startDate) ? inpMissing : inp} />
+                  style={'startDate' in extracted ? inpAI : isMissing(startDate) ? inpMissing : inp} />
               </div>
               <div>
                 <label style={lbl}>End time</label>
                 <input type="datetime-local" value={endDate}
                   onChange={e => setEnd(e.target.value)}
-                  style={extracted.endDate ? inpAI : inp} />
+                  style={'endDate' in extracted ? inpAI : inp} />
               </div>
             </div>
 
@@ -327,13 +326,13 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
               <label style={lbl}>Venue / Location name</label>
               <input type="text" placeholder="e.g. Milwaukee Art Museum" value={location}
                 onChange={e => setLocation(e.target.value)}
-                style={extracted.location ? inpAI : inp} />
+                style={'location' in extracted ? inpAI : inp} />
             </div>
             <div>
               <label style={lbl}>Street Address</label>
               <input type="text" placeholder="e.g. 700 N Art Museum Dr, Milwaukee WI 53202" value={address}
                 onChange={e => setAddress(e.target.value)}
-                style={extracted.address ? inpAI : inp} />
+                style={'address' in extracted ? inpAI : inp} />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -342,12 +341,12 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
                 </label>
                 <input type="text" placeholder="Milwaukee" value={city}
                   onChange={e => setCity(e.target.value)}
-                  style={extracted.city ? inpAI : isMissing(city) ? inpMissing : inp} />
+                  style={'city' in extracted ? inpAI : isMissing(city) ? inpMissing : inp} />
               </div>
               <div>
                 <label style={lbl}>Format</label>
                 <select value={format} onChange={e => setFormat(e.target.value as typeof format)}
-                  style={{ ...(extracted.format ? inpAI : inp), cursor: 'pointer' }}>
+                  style={{ ...('format' in extracted ? inpAI : inp), cursor: 'pointer' }}>
                   <option value="in-person">📍 In-Person</option>
                   <option value="virtual">💻 Virtual</option>
                   <option value="hybrid">🔀 Hybrid</option>
@@ -374,7 +373,7 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
               {!isFree && (
                 <input type="text" placeholder="e.g. $25 per person" value={price}
                   onChange={e => setPrice(e.target.value)}
-                  style={extracted.price ? inpAI : inp} />
+                  style={'price' in extracted ? inpAI : inp} />
               )}
             </div>
 
@@ -383,7 +382,7 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
               <label style={lbl}>Registration / Info URL</label>
               <input type="url" placeholder="https://..." value={url}
                 onChange={e => setUrl(e.target.value)}
-                style={extracted.url ? inpAI : inp} />
+                style={'url' in extracted ? inpAI : inp} />
             </div>
 
             {/* Organizer contact */}
@@ -395,13 +394,13 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
               </p>
               <input type="text" placeholder="Organization / Your name *" value={organizer}
                 onChange={e => setOrganizer(e.target.value)}
-                style={extracted.organizer ? inpAI : isMissing(organizer) ? inpMissing : inp} />
+                style={'organizer' in extracted ? inpAI : isMissing(organizer) ? inpMissing : inp} />
               <input type="email" placeholder="Contact email *" value={contactEmail}
                 onChange={e => setEmail(e.target.value)}
-                style={extracted.contactEmail ? inpAI : isMissing(contactEmail) ? inpMissing : inp} />
+                style={'contactEmail' in extracted ? inpAI : isMissing(contactEmail) ? inpMissing : inp} />
               <input type="tel" placeholder="Contact phone" value={contactPhone}
                 onChange={e => setPhone(e.target.value)}
-                style={extracted.contactPhone ? inpAI : inp} />
+                style={'contactPhone' in extracted ? inpAI : inp} />
             </div>
 
             <div className="rounded-lg px-3 py-2.5" style={{
