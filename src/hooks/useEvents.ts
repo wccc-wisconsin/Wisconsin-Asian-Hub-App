@@ -132,7 +132,6 @@ export async function addEvent(data: Omit<CommunityEvent, 'id' | 'createdAt'>) {
 // ── Group events by time period ──────────────────────────────────────────────
 export function groupEventsByPeriod(events: CommunityEvent[]) {
   const now = new Date()
-  const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7)
 
   const upcoming: CommunityEvent[] = []
   const thisWeek: CommunityEvent[] = []
