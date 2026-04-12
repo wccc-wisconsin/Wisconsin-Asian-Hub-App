@@ -1,9 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent } from '../../hooks/useEvents'
+import { useFirestoreEvents, groupEventsByPeriod, type CommunityEvent } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
-
-const EB_TOKEN = import.meta.env.VITE_EVENTBRITE_TOKEN ?? ''
 
 type FilterCategory = 'all' | 'networking' | 'business' | 'community'
 
@@ -24,28 +22,16 @@ function SkeletonCard() {
 
 export default function EventsModule() {
   const { events: firestoreEvents, loading: fsLoading } = useFirestoreEvents()
-  const [ebEvents, setEbEvents]   = useState<CommunityEvent[]>([])
-  const [ebLoading, setEbLoading] = useState(true)
-  const [ebError, setEbError]     = useState(false)
   const [category, setCategory]   = useState<FilterCategory>('all')
   const [search, setSearch]       = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Fetch Eventbrite events
-  useEffect(() => {
-    if (!EB_TOKEN) { setEbLoading(false); return }
-    fetchEventbriteEvents(EB_TOKEN)
-      .then(events => { setEbEvents(events); setEbLoading(false) })
-      .catch(() => { setEbError(true); setEbLoading(false) })
-  }, [])
-
-  const loading = fsLoading || ebLoading
+  const loading = fsLoading
 
   // Merge & deduplicate all events
   const allEvents = useMemo(() => {
-    const merged = [...firestoreEvents, ...ebEvents]
-    return merged.sort((a, b) => a.startDate.localeCompare(b.startDate))
-  }, [firestoreEvents, ebEvents])
+    return [...firestoreEvents].sort((a, b) => a.startDate.localeCompare(b.startDate))
+  }, [firestoreEvents])
 
   // Filter
   const filtered = useMemo(() => {
@@ -61,7 +47,7 @@ export default function EventsModule() {
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
-}, [allEvents, category, search])
+  }, [allEvents, category, search])
 
   const sorted = useMemo(() => {
     const flagged = filtered.filter(e => (e as CommunityEvent & { flag?: string }).flag)
@@ -110,7 +96,6 @@ export default function EventsModule() {
         </div>
 
 
-
         {/* Category filter */}
         <div className="flex gap-2 overflow-x-auto pb-1">
           {([
@@ -133,7 +118,6 @@ export default function EventsModule() {
 
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
           <span style={{ color: 'var(--color-gold)' }}>{filtered.length}</span> events
-          {ebError && <span className="ml-2" style={{ color: '#ef4444' }}>· Eventbrite unavailable</span>}
         </p>
       </div>
 
