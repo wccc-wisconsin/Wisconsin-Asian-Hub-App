@@ -40,7 +40,7 @@ export function useFirestoreEvents() {
       setEvents(
         snap.docs
           .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
-          .filter(e => e.startDate >= now.slice(0, 10) && (e.status === 'approved' || !e.status))
+          .filter(e => (e.status === 'approved' || !e.status))
       )
       setLoading(false)
     })
@@ -133,20 +133,22 @@ export async function addEvent(data: Omit<CommunityEvent, 'id' | 'createdAt'>) {
 export function groupEventsByPeriod(events: CommunityEvent[]) {
   const now = new Date()
   const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7)
-  const monthEnd = new Date(now); monthEnd.setDate(now.getDate() + 30)
 
-  const groups: { label: string; events: CommunityEvent[] }[] = [
-    { label: 'This Week', events: [] },
-    { label: 'This Month', events: [] },
-    { label: 'Coming Up', events: [] },
-  ]
+  const upcoming: CommunityEvent[] = []
+  const thisWeek: CommunityEvent[] = []
+  const past:     CommunityEvent[] = []
 
   for (const e of events) {
     const d = new Date(e.startDate)
-    if (d <= weekEnd) groups[0].events.push(e)
-    else if (d <= monthEnd) groups[1].events.push(e)
-    else groups[2].events.push(e)
+    if (d < now)          past.push(e)
+    else if (d <= weekEnd) thisWeek.push(e)
+    else                   upcoming.push(e)
   }
 
-  return groups.filter(g => g.events.length > 0)
+  const groups: { label: string; events: CommunityEvent[] }[] = []
+  if (thisWeek.length) groups.push({ label: 'This Week',   events: thisWeek })
+  if (upcoming.length) groups.push({ label: 'Coming Up',   events: upcoming })
+  if (past.length)     groups.push({ label: 'Past Events', events: past.reverse() })
+
+  return groups
 }
