@@ -41,14 +41,14 @@
 
 @layer utilities {
   .skeleton {
-    background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-border) 50%, var(--color-surface) 75%);
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
+    background: var(--color-border);
+    opacity: 0.6;
+    animation: pulse 1.8s ease-in-out infinite;
   }
 
-  @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 0.3; }
   }
 
   .card-hover {
