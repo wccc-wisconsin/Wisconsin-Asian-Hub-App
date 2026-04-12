@@ -1,8 +1,16 @@
 import { useState, useEffect } from 'react'
-import { collection, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, Timestamp, where, getDocs } from 'firebase/firestore'
-import { deleteEventComment } from '../../hooks/useEventComments'
+import { collection, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, where, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { CommunityEvent } from '../../hooks/useEvents'
+
+type EventWithExtras = CommunityEvent & {
+  contactEmail?: string
+  contactPhone?: string
+  flag?: string
+  partnerName?: string
+  status?: string
+  createdAt?: { toDate: () => Date; toMillis: () => number } | null
+}
 
 function formatDate(dateStr: string): string {
   try {
@@ -12,7 +20,7 @@ function formatDate(dateStr: string): string {
   } catch { return dateStr }
 }
 
-function timeAgo(ts: Timestamp | null | undefined): string {
+function timeAgo(ts: EventWithExtras['createdAt']): string {
   if (!ts) return 'just now'
   const diff = Date.now() - ts.toMillis()
   const hrs = Math.floor(diff / 3600000)
@@ -22,21 +30,21 @@ function timeAgo(ts: Timestamp | null | undefined): string {
 }
 
 export default function EventsAdmin() {
-  const [events, setEvents]   = useState<(CommunityEvent & { contactEmail?: string; contactPhone?: string })[]>([])
+  const [events, setEvents]   = useState<EventWithExtras[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter]   = useState<'pending' | 'approved' | 'all'>('pending')
 
   useEffect(() => {
     const q = query(collection(db, 'events'), orderBy('createdAt', 'desc'))
     const unsub = onSnapshot(q, snap => {
-      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as any)))
+      setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as EventWithExtras)))
       setLoading(false)
     })
     return unsub
   }, [])
 
   const filtered = events.filter(e => {
-    if (filter === 'pending') return e.status === 'pending' || !e.status
+    if (filter === 'pending')  return e.status === 'pending' || !e.status
     if (filter === 'approved') return e.status === 'approved'
     return true
   })
@@ -49,13 +57,12 @@ export default function EventsAdmin() {
   }
 
   async function reject(id: string) {
-    if (!confirm('Delete this event submission?')) return
+    if (!confirm('Delete this event?')) return
     await deleteDoc(doc(db, 'events', id))
   }
 
-  const SOURCE_COLORS: Record<string, string> = {
-    wccc: 'var(--color-red)', wedc: '#1d4ed8',
-    eventbrite: '#f37335', community: '#16a34a'
+  async function updateFlag(id: string, flag: string) {
+    await updateDoc(doc(db, 'events', id), { flag: flag || null })
   }
 
   async function exportAttendees(eventId: string, eventTitle: string) {
@@ -78,10 +85,9 @@ export default function EventsAdmin() {
     URL.revokeObjectURL(url)
   }
 
-  async function updateFlag(id: string, flag: string | null, partnerName?: string) {
-    const update: Record<string, unknown> = { flag: flag ?? null }
-    if (partnerName !== undefined) update.partnerName = partnerName
-    await updateDoc(doc(db, 'events', id), update)
+  const SOURCE_COLORS: Record<string, string> = {
+    wccc: 'var(--color-red)', wedc: '#1d4ed8',
+    eventbrite: '#f37335', community: '#16a34a'
   }
 
   return (
@@ -112,7 +118,7 @@ export default function EventsAdmin() {
               color: filter === f ? '#fff' : 'var(--color-muted)',
               border: `1px solid ${filter === f ? 'var(--color-red)' : 'var(--color-border)'}`,
             }}>
-            {f === 'pending' ? `⏳ Pending (${pendingCount})` : f === 'approved' ? `✅ Approved` : '🗂 All'}
+            {f === 'pending' ? `⏳ Pending (${pendingCount})` : f === 'approved' ? '✅ Approved' : '🗂 All'}
           </button>
         ))}
       </div>
@@ -131,7 +137,6 @@ export default function EventsAdmin() {
           background: 'var(--color-surface)',
           border: `1px solid ${(e.status === 'pending' || !e.status) ? 'rgba(251,191,36,0.3)' : 'var(--color-border)'}`
         }}>
-          {/* Header */}
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -149,30 +154,26 @@ export default function EventsAdmin() {
                 }}>
                   {e.status ?? 'pending'}
                 </span>
+                {e.flag && (
+                  <span className="chip text-xs" style={{
+                    background: e.flag === 'wccc' ? 'rgba(185,28,28,0.1)' : e.flag === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
+                    color: e.flag === 'wccc' ? 'var(--color-red)' : e.flag === 'featured' ? 'var(--color-gold)' : '#1d4ed8',
+                    border: '1px solid transparent'
+                  }}>
+                    {e.flag === 'wccc' ? '🔴 WCCC Official' : e.flag === 'featured' ? '⭐ Featured' : '🤝 Partner'}
+                  </span>
+                )}
                 <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
                   {timeAgo(e.createdAt ?? null)}
                 </span>
               </div>
               <p className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>{e.title}</p>
-              {(e as Record<string,unknown>).flag && (
-                <span className="chip text-xs" style={{
-                  background: (e as Record<string,unknown>).flag === 'wccc' ? 'rgba(185,28,28,0.1)' :
-                               (e as Record<string,unknown>).flag === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
-                  color: (e as Record<string,unknown>).flag === 'wccc' ? 'var(--color-red)' :
-                         (e as Record<string,unknown>).flag === 'featured' ? 'var(--color-gold)' : '#1d4ed8',
-                  border: '1px solid transparent'
-                }}>
-                  {(e as Record<string,unknown>).flag === 'wccc' ? '🔴 WCCC Official' :
-                   (e as Record<string,unknown>).flag === 'featured' ? '⭐ Featured' : '🤝 Partner'}
-                </span>
-              )}
               <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
                 📅 {formatDate(e.startDate)} · 📍 {e.location}, {e.city}
               </p>
             </div>
           </div>
 
-          {/* Description */}
           {e.description && (
             <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--color-muted)' }}>
               {e.description}
@@ -200,7 +201,7 @@ export default function EventsAdmin() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex gap-2 flex-wrap items-center">
             {(e.status === 'pending' || !e.status) && (
               <button onClick={() => approve(e.id)}
                 className="text-xs px-3 py-1.5 rounded-full"
@@ -208,10 +209,11 @@ export default function EventsAdmin() {
                 ✅ Approve
               </button>
             )}
+
             {/* Flag selector */}
             <select
-              defaultValue={(e as Record<string,unknown>).flag as string ?? ''}
-              onChange={ev => updateFlag(e.id, ev.target.value || null)}
+              value={e.flag ?? ''}
+              onChange={ev => updateFlag(e.id, ev.target.value)}
               className="text-xs px-2 py-1.5 rounded-full outline-none cursor-pointer"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}>
               <option value="">🏷️ No flag</option>
@@ -219,18 +221,21 @@ export default function EventsAdmin() {
               <option value="partner">🤝 Partner Event</option>
               <option value="featured">⭐ Featured</option>
             </select>
-            {e.url && (
-              <a href={e.url} target="_blank" rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
-                🔗 View link
-              </a>
-            )}
+
             <button onClick={() => exportAttendees(e.id, e.title)}
               className="text-xs px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(29,78,216,0.1)', color: '#1d4ed8', border: '1px solid rgba(29,78,216,0.2)' }}>
               📥 Attendees
             </button>
+
+            {e.url && (
+              <a href={e.url} target="_blank" rel="noopener noreferrer"
+                className="text-xs px-3 py-1.5 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
+                🔗 View
+              </a>
+            )}
+
             <button onClick={() => reject(e.id)}
               className="text-xs px-3 py-1.5 rounded-full"
               style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
