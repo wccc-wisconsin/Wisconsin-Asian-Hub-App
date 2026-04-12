@@ -52,7 +52,7 @@ export default function App() {
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       {/* Header */}
       <header className="sticky top-0 z-50 border-b" style={{
-        background: 'rgba(12,10,9,0.92)', backdropFilter: 'blur(12px)',
+        background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
@@ -105,7 +105,7 @@ export default function App() {
 
       {/* Bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 border-t flex" style={{
-        background: 'rgba(12,10,9,0.97)', backdropFilter: 'blur(12px)',
+        background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)', height: 64, zIndex: 50,
       }}>
         {/* Primary tabs */}
