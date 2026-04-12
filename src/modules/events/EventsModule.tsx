@@ -145,7 +145,7 @@ export default function EventsModule() {
             <div className="flex items-center gap-3 mb-4">
               <h2 className="font-display font-semibold text-base"
                 style={{ color: 'var(--color-text)' }}>
-                {group.label === 'This Week' ? '🔥' : group.label === 'This Month' ? '📅' : '🗓'} {group.label}
+                {group.label === 'This Week' ? '🔥' : group.label === 'Coming Up' ? '🗓' : '📁'} {group.label}
               </h2>
               <span className="chip text-xs" style={{
                 background: 'rgba(185,28,28,0.1)', color: 'var(--color-red)',
