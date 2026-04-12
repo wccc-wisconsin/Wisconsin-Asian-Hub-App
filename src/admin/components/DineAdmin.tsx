@@ -7,7 +7,11 @@ const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Tha
 
 async function fetchPlacesData(name: string, city: string): Promise<{ rating?: number; photoUrl?: string } | null> {
   try {
-    const res = await fetch(`/api/places?name=${encodeURIComponent(name)}&city=${encodeURIComponent(city)}`)
+    const res = await fetch('/api/places', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, city }),
+})
     if (!res.ok) return null
     return await res.json()
   } catch {
