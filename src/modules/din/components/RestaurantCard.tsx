@@ -17,13 +17,18 @@ interface RestaurantCardProps {
 }
 
 function PhotoArea({ restaurant }: { restaurant: Restaurant }) {
-  const isLogo =
-    restaurant.photoUrl &&
-    (restaurant.photoUrl.includes('logo') ||
-      restaurant.photoUrl.includes('icon') ||
-      restaurant.photoUrl.includes('brand'))
+  if (!restaurant.photoUrl) {
+    return (
+      <div
+        className="w-full flex items-center justify-center text-4xl"
+        style={{ height: 120, background: 'var(--color-bg)' }}
+      >
+        {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
+      </div>
+    )
+  }
 
-  return restaurant.photoUrl ? (
+  return (
     <div
       className="w-full flex items-center justify-center"
       style={{ height: 120, background: 'var(--color-bg)', overflow: 'hidden' }}
@@ -34,18 +39,11 @@ function PhotoArea({ restaurant }: { restaurant: Restaurant }) {
         style={{
           width: '100%',
           height: '100%',
-          objectFit: isLogo ? 'contain' : 'cover',
+          objectFit: restaurant.isLogo ? 'contain' : 'cover',
           objectPosition: 'center',
-          padding: isLogo ? '12px' : '0',
+          padding: restaurant.isLogo ? '16px' : '0',
         }}
       />
-    </div>
-  ) : (
-    <div
-      className="w-full flex items-center justify-center text-4xl"
-      style={{ height: 120, background: 'var(--color-bg)' }}
-    >
-      {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
     </div>
   )
 }
@@ -85,7 +83,7 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
         }}
       />
 
-      {/* Photo — links to website if available */}
+      {/* Photo */}
       {url ? (
         <a href={url} target="_blank" rel="noopener noreferrer">
           <PhotoArea restaurant={restaurant} />
@@ -124,7 +122,7 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
           )}
         </div>
 
-        {/* Name — clickable if URL exists */}
+        {/* Name */}
         {url ? (
           <a href={url} target="_blank" rel="noopener noreferrer">
             <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
