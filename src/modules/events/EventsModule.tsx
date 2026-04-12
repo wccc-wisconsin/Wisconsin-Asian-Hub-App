@@ -66,7 +66,7 @@ export default function EventsModule() {
           Events
         </h1>
         <p className="text-sm mt-1 mb-3" style={{ color: 'var(--color-muted)' }}>
-          WCCC, WEDC & Wisconsin Asian community events
+WCCC, Partner & Wisconsin Asian community events
         </p>
         <button onClick={() => setSubmitting(true)}
           className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
