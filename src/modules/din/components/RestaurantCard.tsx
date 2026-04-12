@@ -161,14 +161,15 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
           <div>
             <p
               ref={descRef}
-              className="text-xs"
-              style={{
-                color: 'var(--color-muted)',
-                display: '-webkit-box',
-                WebkitLineClamp: expanded ? 'unset' : 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: expanded ? 'visible' : 'hidden',
-              }}
+className="text-xs"
+style={{
+  color: 'var(--color-muted)',
+  display: '-webkit-box',
+  WebkitLineClamp: expanded ? 'unset' : 2,
+  WebkitBoxOrient: 'vertical',
+  overflow: expanded ? 'visible' : 'hidden',
+  whiteSpace: 'pre-wrap',
+}}
             >
               {restaurant.description}
             </p>
