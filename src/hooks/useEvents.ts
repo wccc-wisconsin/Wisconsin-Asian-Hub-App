@@ -36,7 +36,6 @@ export function useFirestoreEvents() {
   useEffect(() => {
     const q = query(collection(db, 'events'), orderBy('startDate', 'asc'))
     const unsub = onSnapshot(q, snap => {
-      const now = new Date().toISOString()
       setEvents(
         snap.docs
           .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
