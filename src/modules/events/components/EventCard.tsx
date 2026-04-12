@@ -11,11 +11,13 @@ const SOURCE_STYLES = {
   community:  { bg: 'rgba(22,163,74,0.12)',  color: '#16a34a',           border: 'rgba(22,163,74,0.3)',  label: '🌏 Community'  },
 }
 
-const FORMAT_LABELS = {
+const FORMAT_LABELS: Record<string, string> = {
   'in-person': '📍 In-Person',
   'virtual':   '💻 Virtual',
   'hybrid':    '🔀 Hybrid',
 }
+
+type EventWithExtras = CommunityEvent & { address?: string; flag?: string; partnerName?: string }
 
 function formatDate(dateStr: string): string {
   try {
@@ -26,47 +28,49 @@ function formatDate(dateStr: string): string {
   } catch { return dateStr }
 }
 
-interface EventCardProps {
-  event: CommunityEvent
+function toICSDate(dateStr: string): string {
+  return new Date(dateStr).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
 }
 
-function addToCalendar(event: CommunityEvent & { address?: string }) {
-  const start = new Date(event.startDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+function addToCalendar(event: EventWithExtras) {
+  const start = toICSDate(event.startDate)
   const end = event.endDate
-    ? new Date(event.endDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
-    : new Date(new Date(event.startDate).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+    ? toICSDate(event.endDate)
+    : toICSDate(new Date(new Date(event.startDate).getTime() + 2 * 60 * 60 * 1000).toISOString())
 
-  const location = [event.location, (event as CommunityEvent & { address?: string }).address, event.city]
-    .filter(Boolean).join(', ')
+  const location = [event.location, event.address, event.city].filter(Boolean).join(', ')
+  const desc = (event.description ?? '').replace(/\n/g, '\\n')
 
-  const ics = [
+  const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
+    'PRODID:-//Wisconsin Asian Hub//EN',
     'BEGIN:VEVENT',
-    `DTSTART:${start}`,
-    `DTEND:${end}`,
-    `SUMMARY:${event.title}`,
-    `DESCRIPTION:${(event.description ?? '').replace(/
-/g, '\n')}`,
-    `LOCATION:${location}`,
-    event.url ? `URL:${event.url}` : '',
-    'END:VEVENT',
-    'END:VCALENDAR'
-  ].filter(Boolean).join('
-')
+    'DTSTART:' + start,
+    'DTEND:' + end,
+    'SUMMARY:' + event.title,
+    'DESCRIPTION:' + desc,
+    'LOCATION:' + location,
+  ]
+  if (event.url) lines.push('URL:' + event.url)
+  lines.push('END:VEVENT', 'END:VCALENDAR')
 
+  const ics  = lines.join('\r\n')
   const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
   const url  = URL.createObjectURL(blob)
   const a    = document.createElement('a')
   a.href     = url
-  a.download = `${event.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.ics`
+  a.download = event.title.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.ics'
   a.click()
   URL.revokeObjectURL(url)
 }
 
+interface EventCardProps { event: CommunityEvent }
+
 export default function EventCard({ event }: EventCardProps) {
   const [rsvping, setRsvping] = useState(false)
-  const src = SOURCE_STYLES[event.source]
+  const e = event as EventWithExtras
+  const src = SOURCE_STYLES[event.source] ?? SOURCE_STYLES.community
 
   return (
     <>
@@ -84,7 +88,7 @@ export default function EventCard({ event }: EventCardProps) {
             }} />
             <div className="absolute top-2 left-2">
               <span className="chip text-xs font-semibold" style={{
-                background: src.bg, color: src.color, border: `1px solid ${src.border}`,
+                background: src.bg, color: src.color, border: '1px solid ' + src.border,
                 backdropFilter: 'blur(4px)'
               }}>{src.label}</span>
             </div>
@@ -94,32 +98,25 @@ export default function EventCard({ event }: EventCardProps) {
         <div className="p-4">
           {!event.imageUrl && (
             <span className="chip text-xs font-semibold mb-2 inline-block" style={{
-              background: src.bg, color: src.color, border: `1px solid ${src.border}`
+              background: src.bg, color: src.color, border: '1px solid ' + src.border
             }}>{src.label}</span>
           )}
 
           {/* Flag banner */}
-          {(event as CommunityEvent & { flag?: string; partnerName?: string }).flag && (
+          {e.flag && (
             <div className="rounded-lg px-3 py-2 mb-3 flex items-center gap-2" style={{
-              background: (event as CommunityEvent & { flag?: string }).flag === 'wccc'
-                ? 'rgba(185,28,28,0.1)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
-                ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
-              border: `1px solid ${(event as CommunityEvent & { flag?: string }).flag === 'wccc'
-                ? 'rgba(185,28,28,0.3)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
-                ? 'rgba(251,191,36,0.3)' : 'rgba(29,78,216,0.3)'}`,
+              background: e.flag === 'wccc' ? 'rgba(185,28,28,0.1)' : e.flag === 'featured' ? 'rgba(251,191,36,0.1)' : 'rgba(29,78,216,0.1)',
+              border: '1px solid ' + (e.flag === 'wccc' ? 'rgba(185,28,28,0.3)' : e.flag === 'featured' ? 'rgba(251,191,36,0.3)' : 'rgba(29,78,216,0.3)'),
             }}>
               <span className="text-sm">
-                {(event as CommunityEvent & { flag?: string }).flag === 'wccc' ? '🔴' :
-                 (event as CommunityEvent & { flag?: string }).flag === 'featured' ? '⭐' : '🤝'}
+                {e.flag === 'wccc' ? '🔴' : e.flag === 'featured' ? '⭐' : '🤝'}
               </span>
               <span className="text-xs font-semibold" style={{
-                color: (event as CommunityEvent & { flag?: string }).flag === 'wccc'
-                  ? 'var(--color-red)' : (event as CommunityEvent & { flag?: string }).flag === 'featured'
-                  ? 'var(--color-gold)' : '#1d4ed8'
+                color: e.flag === 'wccc' ? 'var(--color-red)' : e.flag === 'featured' ? 'var(--color-gold)' : '#1d4ed8'
               }}>
-                {(event as CommunityEvent & { flag?: string }).flag === 'wccc' ? 'Official WCCC Event' :
-                 (event as CommunityEvent & { flag?: string }).flag === 'featured' ? 'Featured Event' :
-                 `Partner Event${(event as CommunityEvent & { partnerName?: string }).partnerName ? ` · ${(event as CommunityEvent & { partnerName?: string }).partnerName}` : ''}`}
+                {e.flag === 'wccc' ? 'Official WCCC Event' :
+                 e.flag === 'featured' ? 'Featured Event' :
+                 'Partner Event' + (e.partnerName ? ' · ' + e.partnerName : '')}
               </span>
             </div>
           )}
@@ -136,48 +133,47 @@ export default function EventCard({ event }: EventCardProps) {
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-muted)' }}>
               <span>📍</span><span className="truncate">{event.location}</span>
             </div>
-            {(event as CommunityEvent & { address?: string }).address && (
+            {e.address && (
               <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-muted)' }}>
-                <span>🏢</span><span className="truncate">{(event as CommunityEvent & { address?: string }).address}</span>
+                <span>🏢</span><span className="truncate">{e.address}</span>
               </div>
             )}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap mb-3">
             <span className="chip text-xs" style={{
-              background: 'rgba(255,255,255,0.05)',
-              color: 'var(--color-muted)',
+              background: 'rgba(255,255,255,0.05)', color: 'var(--color-muted)',
               border: '1px solid var(--color-border)'
             }}>
-              {FORMAT_LABELS[event.format]}
+              {FORMAT_LABELS[event.format] ?? event.format}
             </span>
             <span className="chip text-xs" style={{
               background: event.isFree ? 'rgba(22,163,74,0.1)' : 'rgba(251,191,36,0.1)',
               color: event.isFree ? '#16a34a' : 'var(--color-gold)',
-              border: `1px solid ${event.isFree ? 'rgba(22,163,74,0.25)' : 'rgba(251,191,36,0.25)'}`
+              border: '1px solid ' + (event.isFree ? 'rgba(22,163,74,0.25)' : 'rgba(251,191,36,0.25)')
             }}>
-              {event.isFree ? '✅ Free' : `💰 ${event.price ?? 'Paid'}`}
+              {event.isFree ? '✅ Free' : '💰 ' + (event.price ?? 'Paid')}
             </span>
           </div>
 
           {event.description && (
-            <p className="text-xs leading-relaxed line-clamp-2 mb-3"
-              style={{ color: 'var(--color-muted)' }}>
+            <p className="text-xs leading-relaxed line-clamp-2 mb-3" style={{ color: 'var(--color-muted)' }}>
               {event.description}
             </p>
           )}
 
+          {/* Actions */}
           <div className="flex gap-2 mb-3">
             {event.url && (
               <a href={event.url} target="_blank" rel="noopener noreferrer"
                 className="flex-1 text-center text-xs font-semibold py-2 rounded-lg"
-                style={{ background: src.bg, color: src.color, border: `1px solid ${src.border}` }}>
+                style={{ background: src.bg, color: src.color, border: '1px solid ' + src.border }}>
                 📋 View Event →
               </a>
             )}
             <button
-              onClick={() => addToCalendar(event as CommunityEvent & { address?: string })}
-              className="text-xs font-semibold py-2 px-3 rounded-lg flex items-center gap-1"
+              onClick={() => addToCalendar(e)}
+              className="text-xs font-semibold py-2 px-3 rounded-lg"
               style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(251,191,36,0.25)' }}>
               📅 Save
             </button>
