@@ -83,7 +83,7 @@ export default function GivingModule() {
 
       {/* Filters */}
       <div className="sticky top-14 z-40 px-4 py-3" style={{
-        background: 'rgba(12,10,9,0.9)', backdropFilter: 'blur(12px)',
+        background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-border)'
       }}>
         {/* Status filter */}
