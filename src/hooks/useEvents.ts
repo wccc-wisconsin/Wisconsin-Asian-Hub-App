@@ -23,6 +23,8 @@ export interface CommunityEvent {
   contactEmail?: string
   contactPhone?: string
   status?: 'pending' | 'approved'
+  flag?: 'wccc' | 'partner' | 'featured' | null
+  partnerName?: string
   createdAt?: Timestamp | null
 }
 
