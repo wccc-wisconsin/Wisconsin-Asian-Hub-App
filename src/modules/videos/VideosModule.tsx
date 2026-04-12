@@ -61,7 +61,7 @@ export default function VideosModule() {
 
       {/* Search bar */}
       <div className="sticky top-14 z-40 px-4 py-3"
-        style={{ background: 'rgba(12,10,9,0.9)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-border)' }}>
+        style={{ background: 'var(--color-bg)', backdropFilter: 'blur(12px)', borderBottom: '1px solid var(--color-border)' }}>
         <div className="max-w-6xl mx-auto relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-muted)' }}>🔍</span>
           <input
