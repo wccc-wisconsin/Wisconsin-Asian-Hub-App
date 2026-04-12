@@ -21,12 +21,12 @@ async function fetchPlacesData(name: string, city: string): Promise<{ rating?: n
     const place = data.places?.[0]
     if (!place) return null
     const photoName = place.photos?.[0]?.name ?? null
-    return {
-      rating: place.rating ?? null,
-      photoUrl: photoName
-        ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
-        : null,
-    }
+return {
+  rating: place.rating ?? undefined,
+  photoUrl: photoName
+    ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
+    : undefined,
+}
   } catch {
     return null
   }
