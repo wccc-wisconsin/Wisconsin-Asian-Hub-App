@@ -65,6 +65,15 @@ export default function EventsAdmin() {
     await updateDoc(doc(db, 'events', id), { flag: flag || null })
   }
 
+  async function updateCategory(id: string, category: string, checked: boolean) {
+    const event = events.find(e => e.id === id)
+    const current: string[] = (event as Record<string,unknown>).category as string[] ?? []
+    const updated = checked
+      ? [...new Set([...current, category])]
+      : current.filter(c => c !== category)
+    await updateDoc(doc(db, 'events', id), { category: updated })
+  }
+
   async function exportAttendees(eventId: string, eventTitle: string) {
     const snap = await getDocs(
       query(collection(db, 'attendees'), where('eventId', '==', eventId), orderBy('createdAt', 'asc'))
@@ -210,6 +219,24 @@ export default function EventsAdmin() {
               </button>
             )}
 
+            {/* Category checkboxes */}
+            <div className="flex gap-2 flex-wrap items-center">
+              <span className="text-xs" style={{ color: 'var(--color-muted)' }}>Categories:</span>
+              {(['networking', 'business', 'community'] as const).map(cat => {
+                const cats = ((e as Record<string,unknown>).category as string[]) ?? []
+                return (
+                  <label key={cat} className="flex items-center gap-1 cursor-pointer text-xs"
+                    style={{ color: 'var(--color-muted)' }}>
+                    <input type="checkbox"
+                      checked={cats.includes(cat)}
+                      onChange={ev => updateCategory(e.id, cat, ev.target.checked)}
+                    />
+                    {cat === 'networking' ? '🤝' : cat === 'business' ? '💼' : '🌏'} {cat}
+                  </label>
+                )
+              })}
+            </div>
+
             {/* Flag selector */}
             <select
               value={e.flag ?? ''}
@@ -217,9 +244,16 @@ export default function EventsAdmin() {
               className="text-xs px-2 py-1.5 rounded-full outline-none cursor-pointer"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}>
               <option value="">🏷️ No flag</option>
-              <option value="wccc">🔴 WCCC Official</option>
-              <option value="partner">🤝 Partner Event</option>
-              <option value="featured">⭐ Featured</option>
+              <optgroup label="Status">
+                <option value="wccc">🔴 WCCC Official</option>
+                <option value="partner">🤝 Partner Event</option>
+                <option value="featured">⭐ Featured</option>
+              </optgroup>
+              <optgroup label="Category">
+                <option value="business">💼 Business</option>
+                <option value="networking">🤝 Networking</option>
+                <option value="community">🌏 Community</option>
+              </optgroup>
             </select>
 
             <button onClick={() => exportAttendees(e.id, e.title)}
