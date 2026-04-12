@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useLayoutEffect } from 'react'
 import type { Restaurant } from '../../../hooks/useDine'
 
 const CUISINE_ICONS: Record<string, string> = {
@@ -16,9 +16,56 @@ interface RestaurantCardProps {
   onShare: () => void
 }
 
+function PhotoArea({ restaurant }: { restaurant: Restaurant }) {
+  const isLogo =
+    restaurant.photoUrl &&
+    (restaurant.photoUrl.includes('logo') ||
+      restaurant.photoUrl.includes('icon') ||
+      restaurant.photoUrl.includes('brand'))
+
+  return restaurant.photoUrl ? (
+    <div
+      className="w-full flex items-center justify-center"
+      style={{ height: 120, background: 'var(--color-bg)', overflow: 'hidden' }}
+    >
+      <img
+        src={restaurant.photoUrl}
+        alt={restaurant.name}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: isLogo ? 'contain' : 'cover',
+          objectPosition: 'center',
+          padding: isLogo ? '12px' : '0',
+        }}
+      />
+    </div>
+  ) : (
+    <div
+      className="w-full flex items-center justify-center text-4xl"
+      style={{ height: 120, background: 'var(--color-bg)' }}
+    >
+      {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
+    </div>
+  )
+}
+
 export default function RestaurantCard({ restaurant, onShare }: RestaurantCardProps) {
   const isWCCC = restaurant.affiliation === 'wccc'
   const [expanded, setExpanded] = useState(false)
+  const [isClamped, setIsClamped] = useState(false)
+  const descRef = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const el = descRef.current
+    if (el) setIsClamped(el.scrollHeight > el.clientHeight + 2)
+  }, [restaurant.description])
+
+  const url = restaurant.website
+    ? restaurant.website.startsWith('http')
+      ? restaurant.website
+      : `https://${restaurant.website}`
+    : null
 
   return (
     <article
@@ -38,21 +85,13 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
         }}
       />
 
-      {/* Photo */}
-      {restaurant.photoUrl ? (
-        <img
-          src={restaurant.photoUrl}
-          alt={restaurant.name}
-          className="w-full object-cover"
-          style={{ height: 120 }}
-        />
+      {/* Photo — links to website if available */}
+      {url ? (
+        <a href={url} target="_blank" rel="noopener noreferrer">
+          <PhotoArea restaurant={restaurant} />
+        </a>
       ) : (
-        <div
-          className="w-full flex items-center justify-center text-4xl"
-          style={{ height: 120, background: 'var(--color-bg)' }}
-        >
-          {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
-        </div>
+        <PhotoArea restaurant={restaurant} />
       )}
 
       {/* Body */}
@@ -85,9 +124,18 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
           )}
         </div>
 
-        <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
-          {restaurant.name}
-        </h3>
+        {/* Name — clickable if URL exists */}
+        {url ? (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
+              {restaurant.name} <span className="text-xs" style={{ color: 'var(--color-muted)' }}>↗</span>
+            </h3>
+          </a>
+        ) : (
+          <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
+            {restaurant.name}
+          </h3>
+        )}
 
         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
           {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'} {restaurant.cuisine} · {restaurant.city}, WI
@@ -114,6 +162,7 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
         {restaurant.description && (
           <div>
             <p
+              ref={descRef}
               className="text-xs"
               style={{
                 color: 'var(--color-muted)',
@@ -125,13 +174,15 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
             >
               {restaurant.description}
             </p>
-            <button
-              onClick={() => setExpanded(e => !e)}
-              className="text-xs mt-1 font-medium"
-              style={{ color: 'var(--color-red)' }}
-            >
-              {expanded ? 'Show less ↑' : 'Read more ↓'}
-            </button>
+            {(isClamped || expanded) && (
+              <button
+                onClick={() => setExpanded(e => !e)}
+                className="text-xs mt-1 font-medium"
+                style={{ color: 'var(--color-red)' }}
+              >
+                {expanded ? 'Show less ↑' : 'Read more ↓'}
+              </button>
+            )}
           </div>
         )}
 
@@ -146,9 +197,9 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
               📞 Call
             </a>
           )}
-          {restaurant.website && (
+          {url && (
             <a
-              href={restaurant.website.startsWith('http') ? restaurant.website : `https://${restaurant.website}`}
+              href={url}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
