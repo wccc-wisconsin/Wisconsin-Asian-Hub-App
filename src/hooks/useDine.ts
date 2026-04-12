@@ -19,6 +19,7 @@ export interface Restaurant {
   website?: string
   description: string
   photoUrl?: string
+  isLogo?: boolean
   hours?: string
   affiliation: Affiliation
   status: RestaurantStatus
