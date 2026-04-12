@@ -25,6 +25,7 @@ export interface Restaurant {
   featured: boolean
   weeklyDeal?: string
   submittedBy?: string
+  rating?: number
   createdAt: Timestamp | null
 }
 
