@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, orderBy, query, updateDoc, deleteDoc, doc, Timestamp, where, getDocs } from 'firebase/firestore'
-import { deleteEventComment } from '../../hooks/useEventComments'
+
 import { db } from '../../lib/firebase'
 import type { CommunityEvent } from '../../hooks/useEvents'
 
