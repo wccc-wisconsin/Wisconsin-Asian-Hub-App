@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useFirestoreEvents, groupEventsByPeriod, type CommunityEvent } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
