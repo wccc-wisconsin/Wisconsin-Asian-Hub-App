@@ -17,7 +17,7 @@ export default function FilterBar({
 }: FilterBarProps) {
   return (
     <div className="sticky top-14 z-40 py-3 px-4" style={{ 
-      background: 'rgba(12,10,9,0.9)',
+      background: 'var(--color-bg)',
       backdropFilter: 'blur(12px)',
       borderBottom: '1px solid var(--color-border)'
     }}>
@@ -33,12 +33,11 @@ export default function FilterBar({
             value={search}
             onChange={e => onSearch(e.target.value)}
             className="w-full pl-9 pr-4 py-2 rounded-lg text-sm outline-none transition-all"
-style={{
-  background: 'var(--color-surface)',
-  border: '1px solid var(--color-border)',
-  color: 'var(--color-text)',
-  fontSize: '16px',
-}}
+            style={{
+              background: 'var(--color-surface)',
+              border: '1px solid var(--color-border)',
+              color: 'var(--color-text)',
+            }}
           />
           {search && (
             <button 
