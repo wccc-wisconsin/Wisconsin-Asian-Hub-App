@@ -32,6 +32,17 @@
     color: var(--color-text);
     font-family: 'DM Sans', sans-serif;
     -webkit-font-smoothing: antialiased;
+    font-weight: 400;
+  }
+
+  @media (max-width: 768px) {
+    body { font-weight: 500; }
+    p, span, div, button, a, input, textarea, select {
+      font-weight: inherit;
+    }
+    .text-xs  { font-size: 0.8rem;  }
+    .text-sm  { font-size: 0.9rem;  }
+    .text-base { font-size: 1rem;   }
   }
 
   ::-webkit-scrollbar { width: 4px; }
