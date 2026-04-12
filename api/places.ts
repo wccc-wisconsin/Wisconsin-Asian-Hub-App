@@ -10,32 +10,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'Google Maps key not configured' })
 
   try {
-    // Step 1: Find Place ID by name + city
-    const searchUrl = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${encodeURIComponent(`${name} ${city} Wisconsin`)}&inputtype=textquery&fields=place_id,name,rating,photos&key=${apiKey}`
+    // Step 1: Text search using Places API (New)
+    const searchRes = await fetch(
+      'https://places.googleapis.com/v1/places:searchText',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': apiKey,
+          'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.photos',
+        },
+        body: JSON.stringify({
+          textQuery: `${name} ${city} Wisconsin`,
+          maxResultCount: 1,
+        }),
+      }
+    )
 
-    const searchRes = await fetch(searchUrl)
     const searchData = await searchRes.json() as {
-      candidates: Array<{
-        place_id?: string
-        name?: string
+      places?: Array<{
+        id?: string
+        displayName?: { text: string }
         rating?: number
-        photos?: Array<{ photo_reference: string }>
+        photos?: Array<{ name: string }>
       }>
     }
 
-    const candidate = searchData.candidates?.[0]
-    if (!candidate) return res.status(404).json({ error: 'Place not found' })
+    const place = searchData.places?.[0]
+    if (!place) return res.status(404).json({ error: 'Place not found' })
 
-    const rating = candidate.rating ?? null
-    const photoReference = candidate.photos?.[0]?.photo_reference ?? null
+    const rating = place.rating ?? null
+    const photoName = place.photos?.[0]?.name ?? null
 
-    // Step 2: Build photo URL if photo reference exists
+    // Step 2: Fetch photo URI if available
     let photoUrl: string | null = null
-    if (photoReference) {
-      photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=800&photo_reference=${photoReference}&key=${apiKey}`
+    if (photoName) {
+      // Places API (New) photo URL format
+      photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
     }
 
-    return res.status(200).json({ rating, photoUrl, placeId: candidate.place_id })
+    return res.status(200).json({ rating, photoUrl, placeId: place.id })
   } catch (err) {
     console.error('Places API error:', err)
     return res.status(500).json({ error: 'Failed to fetch from Google Places' })
