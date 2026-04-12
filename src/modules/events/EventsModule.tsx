@@ -7,7 +7,7 @@ import DiscoverEvents from './components/DiscoverEvents'
 const EB_TOKEN = import.meta.env.VITE_EVENTBRITE_TOKEN ?? ''
 
 type FilterSource = EventSource | 'all'
-type FilterFormat = EventFormat | 'all'
+type FilterCategory = 'all' | 'networking' | 'business' | 'community'
 
 function SkeletonCard() {
   return (
@@ -34,7 +34,7 @@ export default function EventsModule() {
   const [ebLoading, setEbLoading] = useState(true)
   const [ebError, setEbError]     = useState(false)
   const [source, setSource]       = useState<FilterSource>('all')
-  const [format, setFormat]       = useState<FilterFormat>('all')
+  const [category, setCategory]   = useState<FilterCategory>('all')
   const [search, setSearch]       = useState('')
   const [submitting, setSubmitting] = useState(false)
 
@@ -59,13 +59,13 @@ export default function EventsModule() {
     const q = search.toLowerCase()
     return allEvents.filter(e => {
       if (source !== 'all' && e.source !== source) return false
-      if (format !== 'all' && !(
-        e.format === format ||
-        (e.description?.toLowerCase().includes(format) ?? false) ||
-        (e.title?.toLowerCase().includes(format) ?? false) ||
-        (format === 'networking' && (e.title?.toLowerCase().includes('network') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('connect'))) ||
-        (format === 'business' && (e.title?.toLowerCase().includes('business') || e.title?.toLowerCase().includes('professional') || e.title?.toLowerCase().includes('entrepreneur'))) ||
-        (format === 'community' && (e.title?.toLowerCase().includes('community') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('cultural') || e.source === 'community'))
+      if (category !== 'all' && !(
+        e.format === category ||
+        (e.description?.toLowerCase().includes(category) ?? false) ||
+        (e.title?.toLowerCase().includes(category) ?? false) ||
+        (category === 'networking' && (e.title?.toLowerCase().includes('network') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('connect'))) ||
+        (category === 'business' && (e.title?.toLowerCase().includes('business') || e.title?.toLowerCase().includes('professional') || e.title?.toLowerCase().includes('entrepreneur'))) ||
+        (category === 'community' && (e.title?.toLowerCase().includes('community') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('cultural') || e.source === 'community'))
       )) return false
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
@@ -147,12 +147,12 @@ export default function EventsModule() {
             ['business',    '💼 Business'],
             ['community',   '🌏 Community Mixer'],
           ] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setFormat(val as FilterFormat)}
+            <button key={val} onClick={() => setCategory(val as FilterCategory)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
               style={{
-                background: format === val ? 'rgba(251,191,36,0.2)' : 'var(--color-surface)',
-                color: format === val ? 'var(--color-gold)' : 'var(--color-muted)',
-                border: `1px solid ${format === val ? 'rgba(251,191,36,0.4)' : 'var(--color-border)'}`,
+                background: category === val ? 'rgba(251,191,36,0.2)' : 'var(--color-surface)',
+                color: category === val ? 'var(--color-gold)' : 'var(--color-muted)',
+                border: `1px solid ${category === val ? 'rgba(251,191,36,0.4)' : 'var(--color-border)'}`,
               }}>
               {label}
             </button>
