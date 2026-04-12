@@ -25,7 +25,15 @@ function getColor(name: string): string {
 }
 
 export default function EventComments({ eventId }: EventCommentsProps) {
-  const { comments, loading } = useEventComments(eventId)
+  const { comments, loading: rawLoading } = useEventComments(eventId)
+  const [timedOut, setTimedOut] = useState(false)
+  const loading = rawLoading && !timedOut
+
+  // Never show skeleton for more than 3 seconds
+  useState(() => {
+    const t = setTimeout(() => setTimedOut(true), 3000)
+    return () => clearTimeout(t)
+  })
   const [expanded, setExpanded] = useState(false)
   const [name, setName]         = useState(() => localStorage.getItem('comment_name') ?? '')
   const [body, setBody]         = useState('')
