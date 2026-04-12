@@ -13,7 +13,7 @@ export default defineConfig({
         short_name: 'WI Asian Hub',
         description: 'Wisconsin Asian Community Directory & Resource Hub',
         theme_color: '#B91C1C',
-        background_color: '#0f0f0f',
+        background_color: '#1a1714',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
