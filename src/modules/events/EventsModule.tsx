@@ -1,11 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent, type EventSource } from '../../hooks/useEvents'
+import { useFirestoreEvents, fetchEventbriteEvents, groupEventsByPeriod, type CommunityEvent } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
 
 const EB_TOKEN = import.meta.env.VITE_EVENTBRITE_TOKEN ?? ''
 
-type FilterSource = EventSource | 'all'
 type FilterCategory = 'all' | 'networking' | 'business' | 'community'
 
 function SkeletonCard() {
