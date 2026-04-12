@@ -1,6 +1,7 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "framework": "vite",
   "headers": [
     {
       "source": "/sw.js",
@@ -9,9 +10,10 @@
       ]
     }
   ],
-  "routes": [
-    { "src": "/api/chat", "dest": "/api/chat.ts" },
-    { "src": "/api/places", "dest": "/api/places.ts" },
-    { "src": "^/(.*)", "dest": "/index.html" }
+  "rewrites": [
+    {
+      "source": "/((?!api/|assets/|icons/|sw\\.js|manifest\\.webmanifest|workbox-).*)",
+      "destination": "/index.html"
+    }
   ]
 }
