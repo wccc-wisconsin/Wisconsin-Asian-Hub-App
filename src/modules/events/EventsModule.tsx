@@ -28,7 +28,6 @@ export default function EventsModule() {
   const [ebEvents, setEbEvents]   = useState<CommunityEvent[]>([])
   const [ebLoading, setEbLoading] = useState(true)
   const [ebError, setEbError]     = useState(false)
-  const [source, setSource]       = useState<FilterSource>('all')
   const [category, setCategory]   = useState<FilterCategory>('all')
   const [search, setSearch]       = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -53,7 +52,6 @@ export default function EventsModule() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return allEvents.filter(e => {
-      if (source !== 'all' && e.source !== source) return false
       if (category !== 'all' && !(
         (e.description?.toLowerCase().includes(category) ?? false) ||
         (e.title?.toLowerCase().includes(category) ?? false) ||
@@ -64,7 +62,7 @@ export default function EventsModule() {
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [allEvents, source, category, search])
+}, [allEvents, category, search])
 
   const sorted = useMemo(() => {
     const flagged = filtered.filter(e => (e as CommunityEvent & { flag?: string }).flag)
@@ -72,12 +70,6 @@ export default function EventsModule() {
     return [...flagged, ...rest]
   }, [filtered])
   const grouped = useMemo(() => groupEventsByPeriod(sorted), [sorted])
-
-  const sourceOptions: { value: FilterSource; label: string }[] = [
-    { value: 'all',        label: '🗂 All'          },
-    { value: 'wccc',       label: '🔴 WCCC'         },
-    { value: 'eventbrite', label: '🎟️ Eventbrite'   },
-  ]
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
@@ -118,20 +110,7 @@ export default function EventsModule() {
           )}
         </div>
 
-        {/* Source filter */}
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-2">
-          {sourceOptions.map(o => (
-            <button key={o.value} onClick={() => setSource(o.value)}
-              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-              style={{
-                background: source === o.value ? 'var(--color-red)' : 'var(--color-surface)',
-                color: source === o.value ? '#fff' : 'var(--color-muted)',
-                border: `1px solid ${source === o.value ? 'var(--color-red)' : 'var(--color-border)'}`,
-              }}>
-              {o.label}
-            </button>
-          ))}
-        </div>
+
 
         {/* Category filter */}
         <div className="flex gap-2 overflow-x-auto pb-1">
