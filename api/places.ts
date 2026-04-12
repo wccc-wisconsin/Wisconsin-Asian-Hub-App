@@ -1,6 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
 
   const { name, city } = req.query
@@ -10,7 +8,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey) return res.status(500).json({ error: 'Google Maps key not configured' })
 
   try {
-    // Step 1: Text search using Places API (New)
     const searchRes = await fetch(
       'https://places.googleapis.com/v1/places:searchText',
       {
@@ -42,10 +39,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const rating = place.rating ?? null
     const photoName = place.photos?.[0]?.name ?? null
 
-    // Step 2: Fetch photo URI if available
     let photoUrl: string | null = null
     if (photoName) {
-      // Places API (New) photo URL format
       photoUrl = `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
     }
 
