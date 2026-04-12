@@ -65,6 +65,10 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
       : `https://${restaurant.website}`
     : null
 
+  const directionsUrl = restaurant.address
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(restaurant.address + ', ' + restaurant.city + ', WI')}`
+    : null
+
   return (
     <article
       className="rounded-xl overflow-hidden"
@@ -161,15 +165,15 @@ export default function RestaurantCard({ restaurant, onShare }: RestaurantCardPr
           <div>
             <p
               ref={descRef}
-className="text-xs"
-style={{
-  color: 'var(--color-muted)',
-  display: '-webkit-box',
-  WebkitLineClamp: expanded ? 'unset' : 2,
-  WebkitBoxOrient: 'vertical',
-  overflow: expanded ? 'visible' : 'hidden',
-  whiteSpace: 'pre-wrap',
-}}
+              className="text-xs"
+              style={{
+                color: 'var(--color-muted)',
+                display: '-webkit-box',
+                WebkitLineClamp: expanded ? 'unset' : 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: expanded ? 'visible' : 'hidden',
+                whiteSpace: 'pre-wrap',
+              }}
             >
               {restaurant.description}
             </p>
@@ -196,17 +200,17 @@ style={{
               📞 Call
             </a>
           )}
-{restaurant.address && (
-  
-    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(restaurant.address + ', ' + restaurant.city + ', WI')}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
-    style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
-  >
-    🗺️ Directions
-  </a>
-)}
+          {directionsUrl && (
+            <a
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
+              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}
+            >
+              🗺️ Directions
+            </a>
+          )}
           <button
             onClick={onShare}
             className="flex-1 py-2 rounded-lg text-xs font-medium"
