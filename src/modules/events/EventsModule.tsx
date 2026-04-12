@@ -55,7 +55,6 @@ export default function EventsModule() {
     return allEvents.filter(e => {
       if (source !== 'all' && e.source !== source) return false
       if (category !== 'all' && !(
-        e.format === category ||
         (e.description?.toLowerCase().includes(category) ?? false) ||
         (e.title?.toLowerCase().includes(category) ?? false) ||
         (category === 'networking' && (e.title?.toLowerCase().includes('network') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('connect'))) ||
@@ -65,7 +64,7 @@ export default function EventsModule() {
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [allEvents, source, format, search])
+  }, [allEvents, source, category, search])
 
   const sorted = useMemo(() => {
     const flagged = filtered.filter(e => (e as CommunityEvent & { flag?: string }).flag)
