@@ -247,7 +247,7 @@ export default function EventsAdmin() {
             {/* Flag selector */}
             <select
               value={e.flag ?? ''}
-              onChange={ev => updateFlag(e.id, ev.target.value)}
+              onChange={ev => updateFlag(e.id, ev.target.value, true)}
               className="text-xs px-2 py-1.5 rounded-full outline-none cursor-pointer"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-muted)' }}>
               <option value="">🏷️ No flag</option>
