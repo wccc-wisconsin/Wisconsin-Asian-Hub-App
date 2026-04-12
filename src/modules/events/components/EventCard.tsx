@@ -127,8 +127,9 @@ export default function EventCard({ event }: EventCardProps) {
           </h3>
 
           <div className="space-y-1 mb-3">
-            <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-gold)' }}>
-              <span>📅</span><span>{formatDate(event.startDate)}</span>
+<div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-gold)' }}>
+              <span>📅</span>
+              <span>{formatDate(event.startDate)}{event.endDate ? ` – ${formatDate(event.endDate)}` : ''}</span>
             </div>
             <div className="flex items-center gap-1.5 text-xs" style={{ color: 'var(--color-muted)' }}>
               <span>📍</span><span className="truncate">{event.location}</span>
