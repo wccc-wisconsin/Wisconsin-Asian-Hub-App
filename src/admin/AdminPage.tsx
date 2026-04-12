@@ -59,7 +59,7 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen" style={{ background: 'var(--color-bg)' }}>
       <header className="sticky top-0 z-50 border-b" style={{
-        background: 'rgba(12,10,9,0.92)', backdropFilter: 'blur(12px)',
+        background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)'
       }}>
         <div className="max-w-4xl mx-auto px-4 h-14 flex items-center justify-between">
