@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useFirestoreEvents, groupEventsByPeriod, type CommunityEvent } from '../../hooks/useEvents'
 import EventCard from './components/EventCard'
 import SubmitEventForm from './components/SubmitEventForm'
@@ -37,13 +37,10 @@ export default function EventsModule() {
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
     return allEvents.filter(e => {
-      if (category !== 'all' && !(
-        (e.description?.toLowerCase().includes(category) ?? false) ||
-        (e.title?.toLowerCase().includes(category) ?? false) ||
-        (category === 'networking' && (e.title?.toLowerCase().includes('network') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('connect'))) ||
-        (category === 'business' && (e.title?.toLowerCase().includes('business') || e.title?.toLowerCase().includes('professional') || e.title?.toLowerCase().includes('entrepreneur'))) ||
-        (category === 'community' && (e.title?.toLowerCase().includes('community') || e.title?.toLowerCase().includes('mixer') || e.title?.toLowerCase().includes('cultural') || e.source === 'community'))
-      )) return false
+      if (category !== 'all') {
+        const cats = (e as CommunityEvent & { category?: string[] }).category ?? []
+        if (!cats.includes(category)) return false
+      }
       if (q && !`${e.title} ${e.location} ${e.description} ${e.organizer ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
@@ -66,7 +63,7 @@ export default function EventsModule() {
           Events
         </h1>
         <p className="text-sm mt-1 mb-3" style={{ color: 'var(--color-muted)' }}>
-WCCC, Partner & Wisconsin Asian community events
+          WCCC, WEDC & Wisconsin Asian community events
         </p>
         <button onClick={() => setSubmitting(true)}
           className="w-full py-2.5 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
