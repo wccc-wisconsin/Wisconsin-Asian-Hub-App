@@ -7,13 +7,26 @@ const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Tha
 
 async function fetchPlacesData(name: string, city: string): Promise<{ rating?: number; photoUrl?: string } | null> {
   try {
-    const res = await fetch('/api/places', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ name, city }),
-})
-    if (!res.ok) return null
-    return await res.json()
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': apiKey,
+        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.photos',
+      },
+      body: JSON.stringify({ textQuery: `${name} ${city} Wisconsin`, maxResultCount: 1 }),
+    })
+    const data = await res.json()
+    const place = data.places?.[0]
+    if (!place) return null
+    const photoName = place.photos?.[0]?.name ?? null
+    return {
+      rating: place.rating ?? null,
+      photoUrl: photoName
+        ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
+        : null,
+    }
   } catch {
     return null
   }
