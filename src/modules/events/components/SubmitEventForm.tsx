@@ -182,7 +182,7 @@ For year: if no year mentioned, use 2026. Return ONLY valid JSON.`
           {phase === 'paste' ? 'Submit an Event' : phase === 'extracting' ? 'Extracting...' : 'Review & Submit'}
         </h2>
         {phase === 'review' && (
-          <button onClick={handleSubmit} disabled={phase === 'submitting'}
+          <button onClick={handleSubmit} disabled={false}
             className="text-sm font-semibold px-4 py-1.5 rounded-full disabled:opacity-40"
             style={{ background: 'var(--color-red)', color: '#fff' }}>
             Submit
