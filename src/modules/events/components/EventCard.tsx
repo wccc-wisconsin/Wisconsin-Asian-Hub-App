@@ -30,6 +30,40 @@ interface EventCardProps {
   event: CommunityEvent
 }
 
+function addToCalendar(event: CommunityEvent & { address?: string }) {
+  const start = new Date(event.startDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+  const end = event.endDate
+    ? new Date(event.endDate).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+    : new Date(new Date(event.startDate).getTime() + 2 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
+
+  const location = [event.location, (event as CommunityEvent & { address?: string }).address, event.city]
+    .filter(Boolean).join(', ')
+
+  const ics = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'BEGIN:VEVENT',
+    `DTSTART:${start}`,
+    `DTEND:${end}`,
+    `SUMMARY:${event.title}`,
+    `DESCRIPTION:${(event.description ?? '').replace(/
+/g, '\n')}`,
+    `LOCATION:${location}`,
+    event.url ? `URL:${event.url}` : '',
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].filter(Boolean).join('
+')
+
+  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `${event.title.replace(/[^a-z0-9]/gi, '-').toLowerCase()}.ics`
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
 export default function EventCard({ event }: EventCardProps) {
   const [rsvping, setRsvping] = useState(false)
   const src = SOURCE_STYLES[event.source]
@@ -133,13 +167,21 @@ export default function EventCard({ event }: EventCardProps) {
             </p>
           )}
 
-          {event.url && (
-            <a href={event.url} target="_blank" rel="noopener noreferrer"
-              className="block w-full text-center text-xs font-semibold py-2 rounded-lg mb-3"
-              style={{ background: src.bg, color: src.color, border: `1px solid ${src.border}` }}>
-              {event.source === 'eventbrite' ? '🎟️ Get Tickets' : '📋 View Event'} →
-            </a>
-          )}
+          <div className="flex gap-2 mb-3">
+            {event.url && (
+              <a href={event.url} target="_blank" rel="noopener noreferrer"
+                className="flex-1 text-center text-xs font-semibold py-2 rounded-lg"
+                style={{ background: src.bg, color: src.color, border: `1px solid ${src.border}` }}>
+                📋 View Event →
+              </a>
+            )}
+            <button
+              onClick={() => addToCalendar(event as CommunityEvent & { address?: string })}
+              className="text-xs font-semibold py-2 px-3 rounded-lg flex items-center gap-1"
+              style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(251,191,36,0.25)' }}>
+              📅 Save
+            </button>
+          </div>
         </div>
 
         {/* Attendee list */}
