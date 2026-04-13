@@ -22,8 +22,20 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
 
 const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
 
+// Parse deep link from current URL path
+function parseDeepLink(): { tab: Tab; id?: string } {
+  const path = window.location.pathname
+  const match = path.match(/^\/(dine|events|board)\/(.+)$/)
+  if (match) return { tab: match[1] as Tab, id: match[2] }
+  const tabMatch = path.match(/^\/(videos|dine|giving|members|board|chat|events)$/)
+  if (tabMatch) return { tab: tabMatch[1] as Tab }
+  return { tab: 'videos' }
+}
+
 export default function App() {
-  const [tab, setTab]               = useState<Tab>('videos')
+  const deepLink                    = parseDeepLink()
+  const [tab, setTab]               = useState<Tab>(deepLink.tab)
+  const [deepLinkId, setDeepLinkId] = useState<string | undefined>(deepLink.id)
   const [bubbleOpen, setBubbleOpen] = useState(false)
   const [moreOpen, setMoreOpen]     = useState(false)
   const moreRef                     = useRef<HTMLDivElement>(null)
@@ -41,8 +53,10 @@ export default function App() {
 
   function navigate(t: Tab) {
     setTab(t)
+    setDeepLinkId(undefined)
     setMoreOpen(false)
     setBubbleOpen(false)
+    window.history.pushState({}, '', `/${t}`)
   }
 
   const isMoreTab   = MORE_TABS.includes(tab)
@@ -75,7 +89,7 @@ export default function App() {
       {/* Active Module */}
       <main>
         {tab === 'videos'  && <VideosModule  />}
-        {tab === 'dine'    && <DineModule    />}
+        {tab === 'dine'    && <DineModule    deepLinkId={deepLinkId} />}
         {tab === 'giving'  && <GivingModule  />}
         {tab === 'members' && <MembersModule />}
         {tab === 'board'   && <BoardModule   />}
@@ -121,7 +135,6 @@ export default function App() {
 
         {/* More button with popup */}
         <div ref={moreRef} className="flex-1 relative flex flex-col items-center justify-center">
-          {/* Popup menu — appears above the button */}
           {moreOpen && (
             <div className="absolute bottom-full mb-2 right-0 rounded-2xl overflow-hidden shadow-2xl"
               style={{
@@ -147,7 +160,6 @@ export default function App() {
             </div>
           )}
 
-          {/* More button */}
           <button
             onClick={() => { setMoreOpen(o => !o); setBubbleOpen(false) }}
             className="w-full h-full flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
