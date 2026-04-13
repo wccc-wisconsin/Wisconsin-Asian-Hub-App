@@ -338,7 +338,6 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
 
         {filtered.map(r => (
           <RestaurantCard key={r.id} restaurant={r}
-            onShare={() => setSharing(r)}
             onOpen={() => openDetail(r)}
           />
         ))}
