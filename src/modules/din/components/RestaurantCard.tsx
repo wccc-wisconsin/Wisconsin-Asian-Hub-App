@@ -50,7 +50,7 @@ function PhotoArea({ restaurant, onOpen }: { restaurant: Restaurant; onOpen: () 
   )
 }
 
-export default function RestaurantCard({ restaurant, onShare, onOpen }: RestaurantCardProps) {
+export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardProps) {
   const isWCCC = restaurant.affiliation === 'wccc'
   const [expanded, setExpanded] = useState(false)
   const [isClamped, setIsClamped] = useState(false)
