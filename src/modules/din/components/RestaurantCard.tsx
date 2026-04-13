@@ -173,11 +173,20 @@ export default function RestaurantCard({ restaurant, onShare, onOpen }: Restaura
               🗺️ Directions
             </a>
           )}
-          <button onClick={onShare}
-            className="flex-1 py-2 rounded-lg text-xs font-medium"
-            style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}>
-            📤 Share
-          </button>
+<button
+  onClick={() => {
+    const url = `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`
+    if (navigator.share) {
+      navigator.share({ title: restaurant.name, url })
+    } else {
+      navigator.clipboard.writeText(url)
+      alert('Link copied!')
+    }
+  }}
+  className="flex-1 py-2 rounded-lg text-xs font-medium"
+  style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}>
+  📤 Share
+</button>
         </div>
       </div>
     </article>
