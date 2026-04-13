@@ -13,7 +13,6 @@ const CUISINE_ICONS: Record<string, string> = {
 
 interface RestaurantCardProps {
   restaurant: Restaurant
-  onShare: () => void
   onOpen: () => void
 }
 
