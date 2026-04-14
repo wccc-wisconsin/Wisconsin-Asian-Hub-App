@@ -38,7 +38,7 @@ function RestaurantDetail({ restaurant, onClose }: { restaurant: Restaurant; onC
 
   function handleShare() {
     const text = `🍽️ ${restaurant.name} — ${restaurant.cuisine} in ${restaurant.city}, WI\n\nhub.wcccbusinessnetwork.org/dine/${restaurant.id}`
-    if (navigator.share) {
+    if ('share' in navigator) {
       navigator.share({ title: restaurant.name, text, url: `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}` })
     } else {
       navigator.clipboard.writeText(`https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`)
@@ -47,71 +47,40 @@ function RestaurantDetail({ restaurant, onClose }: { restaurant: Restaurant; onC
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto" style={{ background: 'var(--color-bg)' }}>
+    <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--color-bg)' }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center gap-3 px-4 h-14 border-b"
-        style={{ background: 'var(--color-bg)', borderColor: 'var(--color-border)' }}>
-        <button onClick={onClose}
-          className="w-8 h-8 rounded-full flex items-center justify-center"
-          style={{ background: 'var(--color-surface)', color: 'var(--color-text)' }}>
-          ←
+      <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: '1px solid var(--color-border)' }}>
+        <button onClick={onClose} className="text-sm font-medium" style={{ color: 'var(--color-red)' }}>
+          ← Back
         </button>
-        <span className="font-semibold text-sm truncate" style={{ color: 'var(--color-text)' }}>
-          {restaurant.name}
+        <span className="text-xs px-2 py-0.5 rounded-full font-medium" style={{
+          background: isWCCC ? 'rgba(185,28,28,0.15)' : 'rgba(251,191,36,0.15)',
+          color: isWCCC ? 'var(--color-red)' : 'var(--color-gold)',
+        }}>
+          {isWCCC ? '🔴 WCCC' : '🟡 WDA'}
         </span>
-        <button onClick={handleShare} className="ml-auto text-sm px-3 py-1.5 rounded-full"
-          style={{ background: 'rgba(185,28,28,0.1)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.2)' }}>
-          📤 Share
-        </button>
       </div>
 
-      {/* Photo */}
-      {restaurant.photoUrl ? (
-        <div style={{ height: 240, overflow: 'hidden', background: 'var(--color-surface)' }}>
-          <img src={restaurant.photoUrl} alt={restaurant.name}
-            style={{ width: '100%', height: '100%', objectFit: restaurant.isLogo ? 'contain' : 'cover', padding: restaurant.isLogo ? '24px' : 0 }} />
-        </div>
-      ) : (
-        <div className="flex items-center justify-center text-6xl"
-          style={{ height: 200, background: 'var(--color-surface)' }}>
-          {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
-        </div>
-      )}
-
       {/* Content */}
-      <div className="px-4 py-5 space-y-4 pb-24">
-        {/* Badges */}
-        <div className="flex gap-2 flex-wrap">
-          {isWCCC && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(185,28,28,0.15)', color: '#ef4444' }}>WCCC Member</span>
-          )}
-          {restaurant.affiliation === 'wda' && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(251,191,36,0.15)', color: '#d97706' }}>WDA Partner</span>
-          )}
-          {restaurant.featured && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(124,58,237,0.15)', color: '#7c3aed' }}>⭐ Featured</span>
-          )}
-        </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {/* Photo */}
+        {restaurant.photoUrl && (
+          <img src={restaurant.photoUrl} alt={restaurant.name}
+            className="w-full h-48 object-cover rounded-xl" />
+        )}
 
         <div>
-          <h1 className="font-display text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
-            {restaurant.name}
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
-            {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'} {restaurant.cuisine} · {restaurant.city}, WI
+          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>{restaurant.name}</h2>
+          <p className="text-sm mt-1" style={{ color: 'var(--color-gold)' }}>
+            {CUISINE_ICONS[restaurant.cuisine]} {restaurant.cuisine}
+            {restaurant.rating && <span className="ml-2">⭐ {restaurant.rating}</span>}
           </p>
-          {restaurant.rating && (
-            <p className="text-sm mt-1" style={{ color: 'var(--color-gold)' }}>⭐ {restaurant.rating.toFixed(1)} Google Rating</p>
-          )}
         </div>
 
         {restaurant.weeklyDeal && (
-          <div className="rounded-xl px-4 py-3"
-            style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.25)' }}>
-            <p className="text-sm font-semibold" style={{ color: '#ef4444' }}>🎟️ {restaurant.weeklyDeal}</p>
+          <div className="p-3 rounded-xl" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)' }}>
+            <p className="text-xs font-semibold" style={{ color: 'var(--color-gold)' }}>🔥 Weekly Deal</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-text)' }}>{restaurant.weeklyDeal}</p>
           </div>
         )}
 
@@ -188,6 +157,8 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
   const { restaurants, loading }         = useRestaurants()
   const [cuisine, setCuisine]            = useState<Cuisine | 'all'>('all')
   const [affiliation, setAffiliation]    = useState<'all' | 'wccc' | 'wda'>('all')
+  const [city, setCity]                  = useState<string>('all')
+  const [search, setSearch]              = useState('')
   const [submitting, setSubmitting]      = useState(false)
   const [sharing, setSharing]            = useState<Restaurant | null>(null)
   const [detail, setDetail]              = useState<Restaurant | null>(null)
@@ -200,14 +171,28 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
     }
   }, [deepLinkId, restaurants])
 
+  // Extract unique cities from restaurants for the city filter
+  const cities = useMemo(() => {
+    const citySet = new Set(restaurants.map(r => r.city).filter(Boolean))
+    return Array.from(citySet).sort()
+  }, [restaurants])
+
   const featured = restaurants.find(r => r.featured && r.affiliation === 'wccc')
 
-  const filtered = useMemo(() => restaurants.filter(r => {
-    if (r.featured && r.affiliation === 'wccc') return false
-    if (cuisine !== 'all' && r.cuisine !== cuisine) return false
-    if (affiliation !== 'all' && r.affiliation !== affiliation) return false
-    return true
-  }), [restaurants, cuisine, affiliation])
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim()
+    return restaurants.filter(r => {
+      if (r.featured && r.affiliation === 'wccc') return false
+      if (cuisine !== 'all' && r.cuisine !== cuisine) return false
+      if (affiliation !== 'all' && r.affiliation !== affiliation) return false
+      if (city !== 'all' && r.city !== city) return false
+      if (q) {
+        const haystack = `${r.name} ${r.cuisine} ${r.city} ${r.address} ${r.description ?? ''}`.toLowerCase()
+        if (!haystack.includes(q)) return false
+      }
+      return true
+    })
+  }, [restaurants, cuisine, affiliation, city, search])
 
   function openDetail(r: Restaurant) {
     setDetail(r)
@@ -253,8 +238,40 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
         </p>
       </div>
 
+      {/* Search bar */}
+      <div className="px-4 mt-2">
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-muted)' }}>
+            🔍
+          </span>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search restaurants, cuisines, cities..."
+            className="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm"
+            style={{
+              background: 'var(--color-surface)',
+              color: 'var(--color-text)',
+              border: '1px solid var(--color-border)',
+              fontSize: '16px',
+              outline: 'none',
+            }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
+              style={{ color: 'var(--color-muted)' }}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* Featured spotlight */}
-      {!loading && featured && (
+      {!loading && featured && !search && (
         <FeaturedSpotlight restaurant={featured} onShare={() => setSharing(featured)} />
       )}
 
@@ -272,9 +289,11 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
 
       {/* Filters */}
       <div className="sticky top-14 z-40 px-4 py-3 mt-4" style={{
-        background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
+        background: 'color-mix(in srgb, var(--color-bg) 90%, transparent)',
+        backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-border)'
       }}>
+        {/* Affiliation filter */}
         <div className="flex gap-2 mb-2">
           {([['all', '🗂 All'], ['wccc', '🔴 WCCC'], ['wda', '🟡 WDA']] as const).map(([val, label]) => (
             <button key={val} onClick={() => setAffiliation(val)}
@@ -289,7 +308,34 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
           ))}
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1">
+        {/* City filter */}
+        {cities.length > 1 && (
+          <div className="flex gap-2 overflow-x-auto pb-1 mb-2" style={{ scrollbarWidth: 'none' }}>
+            <button onClick={() => setCity('all')}
+              className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+              style={{
+                background: city === 'all' ? 'rgba(185,28,28,0.15)' : 'var(--color-surface)',
+                color: city === 'all' ? 'var(--color-red)' : 'var(--color-muted)',
+                border: `1px solid ${city === 'all' ? 'rgba(185,28,28,0.4)' : 'var(--color-border)'}`,
+              }}>
+              📍 All Cities
+            </button>
+            {cities.map(c => (
+              <button key={c} onClick={() => setCity(c)}
+                className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                style={{
+                  background: city === c ? 'rgba(185,28,28,0.15)' : 'var(--color-surface)',
+                  color: city === c ? 'var(--color-red)' : 'var(--color-muted)',
+                  border: `1px solid ${city === c ? 'rgba(185,28,28,0.4)' : 'var(--color-border)'}`,
+                }}>
+                {c}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Cuisine filter */}
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           <button onClick={() => setCuisine('all')}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
             style={{
@@ -313,7 +359,9 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
         </div>
 
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-          <span style={{ color: 'var(--color-gold)' }}>{filtered.length}</span> restaurants
+          <span style={{ color: 'var(--color-gold)' }}>{filtered.length}</span> restaurant{filtered.length !== 1 ? 's' : ''}
+          {search && <span> matching "<strong style={{ color: 'var(--color-text)' }}>{search}</strong>"</span>}
+          {city !== 'all' && <span> in <strong style={{ color: 'var(--color-text)' }}>{city}</strong></span>}
         </p>
       </div>
 
@@ -336,10 +384,25 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
           </div>
         )}
 
+        {!loading && filtered.length === 0 && restaurants.length > 0 && (
+          <div className="col-span-full text-center py-12">
+            <p className="text-3xl mb-3">🔍</p>
+            <p className="font-medium" style={{ color: 'var(--color-text)' }}>No restaurants found</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
+              Try adjusting your search or filters
+            </p>
+            <button onClick={() => { setSearch(''); setCuisine('all'); setAffiliation('all'); setCity('all') }}
+              className="mt-4 px-5 py-2 rounded-full text-sm font-medium"
+              style={{ background: 'var(--color-surface)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.25)' }}>
+              Clear all filters
+            </button>
+          </div>
+        )}
+
         {filtered.map(r => (
-          <RestaurantCard key={r.id} restaurant={r}
-            onOpen={() => openDetail(r)}
-          />
+          <div key={r.id} onClick={() => openDetail(r)} className="cursor-pointer">
+            <RestaurantCard restaurant={r} onShare={() => { setSharing(r) }} />
+          </div>
         ))}
       </div>
     </div>
