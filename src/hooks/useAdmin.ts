@@ -12,6 +12,7 @@ export function useAuth() {
   const [user, setUser]         = useState<User | null>(null)
   const [isAdmin, setIsAdmin]   = useState(false)
   const [loading, setLoading]   = useState(true)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async u => {
@@ -23,6 +24,7 @@ export function useAuth() {
         setIsAdmin(false)
       }
       setLoading(false)
+      setChecking(false)
     })
     return unsub
   }, [])
@@ -35,7 +37,7 @@ export function useAuth() {
     await signOut(auth)
   }
 
-  return { user, isAdmin, loading, signInWithGoogle, signOutAdmin }
+  return { user, isAdmin, loading: loading || checking, signInWithGoogle, signOutAdmin }
 }
 
 export function useAdminUsers() {
@@ -46,7 +48,7 @@ export function useAdminUsers() {
     const unsub = onSnapshot(collection(db, 'admins'), snap => {
       setAdmins(snap.docs.map(d => ({ email: d.id, ...d.data() } as AdminUser)))
       setLoading(false)
-    })
+    }, () => setLoading(false))
     return unsub
   }, [])
 
