@@ -19,7 +19,7 @@ const ADMIN_TABS = [
 
 export default function AdminPage() {
   const { user, isAdmin, loading, signInWithGoogle, signOutAdmin } = useAuth()
-  const [tab, setTab]           = useState<AdminTab>('dine')
+  const [tab, setTab]             = useState<AdminTab>('dine')
   const [signingIn, setSigningIn] = useState(false)
 
   async function handleLogin() {
@@ -28,6 +28,7 @@ export default function AdminPage() {
     finally { setSigningIn(false) }
   }
 
+  // Show spinner while auth + admin check is in progress
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -38,7 +39,8 @@ export default function AdminPage() {
 
   if (!user) return <AdminLogin onLogin={handleLogin} loading={signingIn} />
 
-  if (!isAdmin) {
+  // Only show Access Denied after loading is fully complete
+  if (!isAdmin && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 text-center"
         style={{ background: 'var(--color-bg)' }}>
