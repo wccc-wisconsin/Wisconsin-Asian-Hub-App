@@ -12,23 +12,17 @@ export function useAuth() {
   const [user, setUser]         = useState<User | null>(null)
   const [isAdmin, setIsAdmin]   = useState(false)
   const [loading, setLoading]   = useState(true)
-  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-const unsub = onAuthStateChanged(auth, async u => {
-      console.log('Auth state changed:', u?.email ?? 'null')
+    const unsub = onAuthStateChanged(auth, async u => {
       setUser(u)
       if (u?.email) {
-        console.log('Checking admin for:', u.email)
         const snap = await getDoc(doc(db, 'admins', u.email))
-        console.log('Is admin:', snap.exists())
         setIsAdmin(snap.exists())
       } else {
-        console.log('No user, setting isAdmin false')
         setIsAdmin(false)
       }
       setLoading(false)
-      setChecking(false)
     })
     return unsub
   }, [])
@@ -41,7 +35,7 @@ const unsub = onAuthStateChanged(auth, async u => {
     await signOut(auth)
   }
 
-  return { user, isAdmin, loading: loading || checking, signInWithGoogle, signOutAdmin }
+  return { user, isAdmin, loading, signInWithGoogle, signOutAdmin }
 }
 
 export function useAdminUsers() {
@@ -52,7 +46,7 @@ export function useAdminUsers() {
     const unsub = onSnapshot(collection(db, 'admins'), snap => {
       setAdmins(snap.docs.map(d => ({ email: d.id, ...d.data() } as AdminUser)))
       setLoading(false)
-    }, () => setLoading(false))
+    })
     return unsub
   }, [])
 
