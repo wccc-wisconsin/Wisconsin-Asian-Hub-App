@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useMembers } from '../../hooks/useMembers'
 import MemberCard from './components/MemberCard'
 import FilterBar from './components/FilterBar'
+import SubmitMemberForm from './components/SubmitMemberForm'
 
 function SkeletonCard() {
   return (
@@ -31,6 +32,7 @@ export default function MembersModule() {
   const [category, setCategory] = useState('')
   const [search, setSearch]     = useState('')
   const [wcccOnly, setWcccOnly] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const cities = useMemo(() =>
     [...new Set(members.map(m => m.city).filter(Boolean))].sort(), [members])
@@ -53,6 +55,8 @@ export default function MembersModule() {
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
+      {submitting && <SubmitMemberForm onClose={() => setSubmitting(false)} />}
+
       {/* Header */}
       <div className="px-4 pt-5 pb-3 text-center">
         <h1 className="font-display text-xl font-bold" style={{ color: 'var(--color-text)' }}>
@@ -69,6 +73,18 @@ export default function MembersModule() {
             <span style={{ color: 'var(--color-red)' }}>{wcccCount}</span> WCCC members
           </span>
         </div>
+      </div>
+
+      {/* Submit CTA */}
+      <div className="px-4 mb-2">
+        <button onClick={() => setSubmitting(true)}
+          className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          style={{
+            background: 'rgba(185,28,28,0.08)', color: 'var(--color-red)',
+            border: '1px solid rgba(185,28,28,0.25)',
+          }}>
+          🏢 Add Your Business
+        </button>
       </div>
 
       <FilterBar
