@@ -6,15 +6,17 @@ import BoardAdmin from './components/BoardAdmin'
 import AdminUsersPanel from './components/AdminUsersPanel'
 import DineAdmin from './components/DineAdmin'
 import EventsAdmin from './components/EventsAdmin'
+import MembersEnrichmentAdmin from './components/MembersEnrichmentAdmin'
 
-type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'admins'
+type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'admins'
 
 const ADMIN_TABS = [
-  { id: 'dine',   icon: '🍜', label: 'Dine'   },
-  { id: 'giving', icon: '🤝', label: 'Giving' },
-  { id: 'board',  icon: '📋', label: 'Board'  },
-  { id: 'events', icon: '📅', label: 'Events' },
-  { id: 'admins', icon: '👤', label: 'Admins' },
+  { id: 'dine',    icon: '🍜', label: 'Dine'    },
+  { id: 'giving',  icon: '🤝', label: 'Giving'  },
+  { id: 'board',   icon: '📋', label: 'Board'   },
+  { id: 'events',  icon: '📅', label: 'Events'  },
+  { id: 'members', icon: '👥', label: 'Members' },
+  { id: 'admins',  icon: '👤', label: 'Admins'  },
 ] as const
 
 export default function AdminPage() {
@@ -28,7 +30,6 @@ export default function AdminPage() {
     finally { setSigningIn(false) }
   }
 
-  // Show spinner while auth + admin check is in progress
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
@@ -39,7 +40,6 @@ export default function AdminPage() {
 
   if (!user) return <AdminLogin onLogin={handleLogin} loading={signingIn} />
 
-  // Only show Access Denied after loading is fully complete
   if (!isAdmin && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 text-center"
@@ -100,11 +100,12 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {tab === 'dine'   && <DineAdmin />}
-        {tab === 'giving' && <GivingAdmin />}
-        {tab === 'board'  && <BoardAdmin />}
-        {tab === 'events' && <EventsAdmin />}
-        {tab === 'admins' && <AdminUsersPanel currentEmail={user.email ?? ''} />}
+        {tab === 'dine'    && <DineAdmin />}
+        {tab === 'giving'  && <GivingAdmin />}
+        {tab === 'board'   && <BoardAdmin />}
+        {tab === 'events'  && <EventsAdmin />}
+        {tab === 'members' && <MembersEnrichmentAdmin />}
+        {tab === 'admins'  && <AdminUsersPanel currentEmail={user.email ?? ''} />}
       </div>
     </div>
   )
