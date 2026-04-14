@@ -6,7 +6,6 @@ import BoardAdmin from './components/BoardAdmin'
 import AdminUsersPanel from './components/AdminUsersPanel'
 import DineAdmin from './components/DineAdmin'
 import EventsAdmin from './components/EventsAdmin'
-import MembersEnrichmentAdmin from './components/MembersEnrichmentAdmin'
 
 type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'admins'
 
@@ -104,7 +103,7 @@ export default function AdminPage() {
         {tab === 'giving'  && <GivingAdmin />}
         {tab === 'board'   && <BoardAdmin />}
         {tab === 'events'  && <EventsAdmin />}
-        {tab === 'members' && <MembersEnrichmentAdmin />}
+{tab === 'members' && <div style={{padding:'2rem',color:'var(--color-text)'}}>Members enrichment coming soon</div>}
         {tab === 'admins'  && <AdminUsersPanel currentEmail={user.email ?? ''} />}
       </div>
     </div>
