@@ -59,7 +59,7 @@ export default function MemberCard({ member }: MemberCardProps) {
           <img
             src={photo}
             alt={member.name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
           />
         ) : (
           <div
