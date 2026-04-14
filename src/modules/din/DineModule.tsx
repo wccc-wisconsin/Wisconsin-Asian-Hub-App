@@ -41,7 +41,7 @@ function RestaurantDetail({ restaurant, onClose }: { restaurant: Restaurant; onC
     if ('share' in navigator) {
       navigator.share({ title: restaurant.name, text, url: `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}` })
     } else {
-      void navigator.clipboard?.writeText(`https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`)
+     window.navigator.clipboard && window.navigator.clipboard.writeText(`https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`)
       alert('Link copied!')
     }
   }
