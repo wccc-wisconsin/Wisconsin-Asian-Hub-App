@@ -24,11 +24,15 @@ const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
 
 // Parse deep link from current URL path
 function parseDeepLink(): { tab: Tab; id?: string } {
-  const path = window.location.pathname
-  const match = path.match(/^\/(dine|events|board)\/(.+)$/)
-  if (match) return { tab: match[1] as Tab, id: match[2] }
-  const tabMatch = path.match(/^\/(videos|dine|giving|members|board|chat|events)$/)
-  if (tabMatch) return { tab: tabMatch[1] as Tab }
+  try {
+    const path = window.location.pathname ?? '/'
+    const match = path.match(/^\/(dine|events|board)\/(.+)$/)
+    if (match?.[1] && match?.[2]) return { tab: match[1] as Tab, id: match[2] }
+    const tabMatch = path.match(/^\/(videos|dine|giving|members|board|chat|events)$/)
+    if (tabMatch?.[1]) return { tab: tabMatch[1] as Tab }
+  } catch {
+    // ignore
+  }
   return { tab: 'videos' }
 }
 
