@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, addDoc, onSnapshot, orderBy, query, where, serverTimestamp, Timestamp } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, query, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 
 export type EventSource = 'wccc' | 'wedc' | 'eventbrite' | 'community'
@@ -11,7 +11,7 @@ export interface CommunityEvent {
   description: string
   source: EventSource
   format: EventFormat
-  startDate: string       // ISO string
+  startDate: string
   endDate?: string
   location: string
   city: string
@@ -28,23 +28,20 @@ export interface CommunityEvent {
   createdAt?: Timestamp | null
 }
 
-// ── Firestore events (WCCC + WEDC + manually added) ─────────────────────────
+// ── Firestore events ─────────────────────────────────────────────────────────
 export function useFirestoreEvents() {
   const [events, setEvents] = useState<CommunityEvent[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'events'),
-      where('startDate', '!=', null),
-      orderBy('startDate', 'asc')
-    )
+    // No orderBy — sort in JS to avoid composite index requirement
+    const q = query(collection(db, 'events'))
     const unsub = onSnapshot(q, snap => {
-      setEvents(
-        snap.docs
-          .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
-          .filter(e => (e.status === 'approved' || !e.status))
-      )
+      const all = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
+        .filter(e => e.startDate && (e.status === 'approved' || !e.status))
+        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+      setEvents(all)
       setLoading(false)
     }, () => setLoading(false))
     return unsub
