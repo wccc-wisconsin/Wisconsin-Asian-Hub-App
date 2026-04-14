@@ -7,15 +7,14 @@ import AdminUsersPanel from './components/AdminUsersPanel'
 import DineAdmin from './components/DineAdmin'
 import EventsAdmin from './components/EventsAdmin'
 
-type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'admins'
+type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'admins'
 
 const ADMIN_TABS = [
-  { id: 'dine',    icon: '🍜', label: 'Dine'    },
-  { id: 'giving',  icon: '🤝', label: 'Giving'  },
-  { id: 'board',   icon: '📋', label: 'Board'   },
-  { id: 'events',  icon: '📅', label: 'Events'  },
-  { id: 'members', icon: '👥', label: 'Members' },
-  { id: 'admins',  icon: '👤', label: 'Admins'  },
+  { id: 'dine',   icon: '🍜', label: 'Dine'   },
+  { id: 'giving', icon: '🤝', label: 'Giving' },
+  { id: 'board',  icon: '📋', label: 'Board'  },
+  { id: 'events', icon: '📅', label: 'Events' },
+  { id: 'admins', icon: '👤', label: 'Admins' },
 ] as const
 
 export default function AdminPage() {
@@ -99,12 +98,11 @@ export default function AdminPage() {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6">
-        {tab === 'dine'    && <DineAdmin />}
-        {tab === 'giving'  && <GivingAdmin />}
-        {tab === 'board'   && <BoardAdmin />}
-        {tab === 'events'  && <EventsAdmin />}
-{tab === 'members' && <div style={{padding:'2rem',color:'var(--color-text)'}}>Members enrichment coming soon</div>}
-        {tab === 'admins'  && <AdminUsersPanel currentEmail={user.email ?? ''} />}
+        {tab === 'dine'   && <DineAdmin />}
+        {tab === 'giving' && <GivingAdmin />}
+        {tab === 'board'  && <BoardAdmin />}
+        {tab === 'events' && <EventsAdmin />}
+        {tab === 'admins' && <AdminUsersPanel currentEmail={user.email ?? ''} />}
       </div>
     </div>
   )
