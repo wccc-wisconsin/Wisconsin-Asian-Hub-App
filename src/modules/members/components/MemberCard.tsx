@@ -21,9 +21,19 @@ export default function MemberCard({ member }: MemberCardProps) {
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(member.address)}`
     : null
 
-  const url = member.website
-    ? member.website.startsWith('http') ? member.website : `https://${member.website}`
+  // Website URL
+  const rawWebsite = member.googleWebsite || member.website
+  const websiteUrl = rawWebsite
+    ? rawWebsite.startsWith('http') ? rawWebsite : `https://${rawWebsite}`
     : null
+
+  // Google Maps Business Profile URL
+  const googleMapsUrl = member.placeId
+    ? `https://www.google.com/maps/place/?q=place_id:${member.placeId}`
+    : null
+
+  // Primary link — website first, Google Maps profile as fallback
+  const primaryUrl = websiteUrl || googleMapsUrl
 
   function handleShare() {
     const text = `${member.name} — ${member.city}, WI\nhub.wcccbusinessnetwork.org`
@@ -50,26 +60,50 @@ export default function MemberCard({ member }: MemberCardProps) {
           : 'linear-gradient(90deg, #6b7280, #9ca3af)',
       }} />
 
-      {/* Photo */}
-      <div
-        className="w-full flex items-center justify-center"
-        style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
-      >
-        {photo ? (
-          <img
-            src={photo}
-            alt={member.name}
-            style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
-          />
-        ) : (
+      {/* Photo — links to primary URL */}
+      {primaryUrl ? (
+        <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
           <div
-            className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
-            style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
+            className="w-full flex items-center justify-center"
+            style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
           >
-            {initial}
+            {photo ? (
+              <img
+                src={photo}
+                alt={member.name}
+                style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
+                style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
+              >
+                {initial}
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </a>
+      ) : (
+        <div
+          className="w-full flex items-center justify-center"
+          style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
+        >
+          {photo ? (
+            <img
+              src={photo}
+              alt={member.name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
+            />
+          ) : (
+            <div
+              className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
+              style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
+            >
+              {initial}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Body */}
       <div className="p-4 space-y-2">
@@ -89,9 +123,9 @@ export default function MemberCard({ member }: MemberCardProps) {
           )}
         </div>
 
-        {/* Name */}
-        {url ? (
-          <a href={url} target="_blank" rel="noopener noreferrer">
+        {/* Name — links to primary URL */}
+        {primaryUrl ? (
+          <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
             <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
               {member.name} <span className="text-xs" style={{ color: 'var(--color-muted)' }}>↗</span>
             </h3>
@@ -155,6 +189,13 @@ export default function MemberCard({ member }: MemberCardProps) {
               className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
               style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
               🗺️ Directions
+            </a>
+          )}
+          {websiteUrl && (
+            <a href={websiteUrl} target="_blank" rel="noopener noreferrer"
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
+              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
+              🌐 Visit
             </a>
           )}
           <button
