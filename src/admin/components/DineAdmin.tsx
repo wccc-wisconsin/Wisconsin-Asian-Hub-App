@@ -144,7 +144,7 @@ function RestaurantRow({ r }: { r: Restaurant }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: r.affiliation === 'wccc' ? 'rgba(185,28,28,0.15)' : 'rgba(251,191,36,0.15)', color: r.affiliation === 'wccc' ? '#ef4444' : '#d97706' }}>
-              {r.affiliation.toUpperCase()}
+              {(r.affiliation ?? 'wccc').toUpperCase()}
             </span>
             {r.featured && (
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
