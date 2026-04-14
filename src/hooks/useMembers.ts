@@ -10,6 +10,7 @@ export interface Member {
   email?: string
   phone?: string
   website?: string
+  googleWebsite?: string
   photo?: string
   googlePhoto?: string
   description?: string
