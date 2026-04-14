@@ -41,7 +41,7 @@ function RestaurantDetail({ restaurant, onClose }: { restaurant: Restaurant; onC
     if ('share' in navigator) {
       navigator.share({ title: restaurant.name, text, url: `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}` })
     } else {
-      navigator.clipboard.writeText(`https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`)
+      void navigator.clipboard?.writeText(`https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`)
       alert('Link copied!')
     }
   }
@@ -399,10 +399,8 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
           </div>
         )}
 
-        {filtered.map(r => (
-          <div key={r.id} onClick={() => openDetail(r)} className="cursor-pointer">
-            <RestaurantCard restaurant={r} onShare={() => { setSharing(r) }} />
-          </div>
+{filtered.map(r => (
+          <RestaurantCard key={r.id} restaurant={r} onOpen={() => openDetail(r)} />
         ))}
       </div>
     </div>
