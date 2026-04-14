@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, addDoc, onSnapshot, query, serverTimestamp, Timestamp } from 'firebase/firestore'
+import { collection, addDoc, onSnapshot, orderBy, query, serverTimestamp, Timestamp } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 
 export type EventSource = 'wccc' | 'wedc' | 'eventbrite' | 'community'
@@ -11,7 +11,7 @@ export interface CommunityEvent {
   description: string
   source: EventSource
   format: EventFormat
-  startDate: string
+  startDate: string       // ISO string
   endDate?: string
   location: string
   city: string
@@ -28,22 +28,21 @@ export interface CommunityEvent {
   createdAt?: Timestamp | null
 }
 
-// ── Firestore events ─────────────────────────────────────────────────────────
+// ── Firestore events (WCCC + WEDC + manually added) ─────────────────────────
 export function useFirestoreEvents() {
   const [events, setEvents] = useState<CommunityEvent[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // No orderBy — sort in JS to avoid composite index requirement
-    const q = query(collection(db, 'events'))
+    const q = query(collection(db, 'events'), orderBy('startDate', 'asc'))
     const unsub = onSnapshot(q, snap => {
-      const all = snap.docs
-        .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
-        .filter(e => e.startDate && (e.status === 'approved' || !e.status))
-        .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
-      setEvents(all)
+      setEvents(
+        snap.docs
+          .map(d => ({ id: d.id, ...d.data() } as CommunityEvent))
+          .filter(e => (e.status === 'approved' || !e.status))
+      )
       setLoading(false)
-    }, () => setLoading(false))
+    })
     return unsub
   }, [])
 
@@ -51,10 +50,12 @@ export function useFirestoreEvents() {
 }
 
 // ── Eventbrite API ───────────────────────────────────────────────────────────
+// Fetches events from WCCC's own Eventbrite organization
 export async function fetchEventbriteEvents(token: string): Promise<CommunityEvent[]> {
   const results: CommunityEvent[] = []
 
   try {
+    // Get the current user's organization ID first
     const meRes = await fetch('https://www.eventbriteapi.com/v3/users/me/organizations/', {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -64,6 +65,7 @@ export async function fetchEventbriteEvents(token: string): Promise<CommunityEve
     const orgId = meData.organizations?.[0]?.id
     if (!orgId) return []
 
+    // Fetch events for this organization
     const url = new URL(`https://www.eventbriteapi.com/v3/organizations/${orgId}/events/`)
     url.searchParams.set('expand', 'venue,organizer,ticket_availability')
     url.searchParams.set('status', 'live')
@@ -93,6 +95,7 @@ export async function fetchEventbriteEvents(token: string): Promise<CommunityEve
     }
 
     for (const e of data.events ?? []) {
+      // Only show future events
       if (new Date(e.start.local) < new Date()) continue
       results.push({
         id: `eb-${e.id}`,
@@ -116,7 +119,7 @@ export async function fetchEventbriteEvents(token: string): Promise<CommunityEve
   return results
 }
 
-// ── Add event ────────────────────────────────────────────────────────────────
+// ── Add event (admin) ────────────────────────────────────────────────────────
 export async function addEvent(data: Omit<CommunityEvent, 'id' | 'createdAt'>) {
   const clean: Record<string, unknown> = {}
   for (const [k, v] of Object.entries(data)) {
@@ -136,7 +139,7 @@ export function groupEventsByPeriod(events: CommunityEvent[]) {
 
   for (const e of events) {
     const d = new Date(e.startDate)
-    if (d < now)           past.push(e)
+    if (d < now)          past.push(e)
     else if (d <= weekEnd) thisWeek.push(e)
     else                   upcoming.push(e)
   }
