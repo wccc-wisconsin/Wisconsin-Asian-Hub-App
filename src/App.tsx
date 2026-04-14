@@ -22,24 +22,13 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
 
 const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
 
-const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events'])
-
+// Parse deep link from current URL path
 function parseDeepLink(): { tab: Tab; id?: string } {
-  try {
-    const path = window.location.pathname ?? '/'
-    const match = path.match(/^\/(dine|events|board)\/(.+)$/)
-    if (match?.[1] && match?.[2]) {
-      const t = match[1] as Tab
-      if (VALID_TABS.has(t)) return { tab: t, id: match[2] }
-    }
-    const tabMatch = path.match(/^\/([a-z]+)$/)
-    if (tabMatch?.[1]) {
-      const t = tabMatch[1] as Tab
-      if (VALID_TABS.has(t)) return { tab: t }
-    }
-  } catch {
-    // ignore any errors
-  }
+  const path = window.location.pathname
+  const match = path.match(/^\/(dine|events|board)\/(.+)$/)
+  if (match) return { tab: match[1] as Tab, id: match[2] }
+  const tabMatch = path.match(/^\/(videos|dine|giving|members|board|chat|events)$/)
+  if (tabMatch) return { tab: tabMatch[1] as Tab }
   return { tab: 'videos' }
 }
 
@@ -51,6 +40,7 @@ export default function App() {
   const [moreOpen, setMoreOpen]     = useState(false)
   const moreRef                     = useRef<HTMLDivElement>(null)
 
+  // Close popup when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
@@ -132,6 +122,7 @@ export default function App() {
         background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)', height: 64, zIndex: 50,
       }}>
+        {/* Primary tabs */}
         {(['videos', 'dine', 'giving'] as Tab[]).map(t => (
           <button key={t}
             onClick={() => navigate(t)}
@@ -142,6 +133,7 @@ export default function App() {
           </button>
         ))}
 
+        {/* More button with popup */}
         <div ref={moreRef} className="flex-1 relative flex flex-col items-center justify-center">
           {moreOpen && (
             <div className="absolute bottom-full mb-2 right-0 rounded-2xl overflow-hidden shadow-2xl"
