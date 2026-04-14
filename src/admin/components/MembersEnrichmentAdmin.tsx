@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { collection, doc, setDoc, getDocs } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 
+// Separate from Member interface to avoid [key: string] index signature conflict
 interface SheetMember {
-  id: string
   name: string
   city: string
   category: string
@@ -15,13 +15,23 @@ interface SheetMember {
   [key: string]: string | undefined
 }
 
-interface EnrichedMember extends SheetMember {
+// Firestore document — no index signature, explicit types only
+interface FirestoreMember {
+  id: string
+  name: string
+  city: string
+  category: string
+  email: string
+  phone: string
+  website: string
+  photo: string
+  description: string
   wccc: boolean
-  placeId?: string
-  rating?: number
-  googlePhoto?: string
-  address?: string
   enriched: boolean
+  placeId: string
+  rating: number | null
+  googlePhoto: string
+  address: string
 }
 
 interface LogEntry {
@@ -49,8 +59,8 @@ function normalizeKey(raw: string): string {
 }
 
 async function fetchSheetMembers(): Promise<SheetMember[]> {
-  const sheetId = import.meta.env.VITE_SHEET_ID
-  const apiKey  = import.meta.env.VITE_SHEETS_API_KEY
+  const sheetId   = import.meta.env.VITE_SHEET_ID
+  const apiKey    = import.meta.env.VITE_SHEETS_API_KEY
   const sheetName = import.meta.env.VITE_SHEET_NAME ?? 'Sheet1'
 
   const url = new URL(
@@ -68,10 +78,10 @@ async function fetchSheetMembers(): Promise<SheetMember[]> {
   const normalizedHeaders = headers.map(normalizeKey)
 
   return rows.slice(1).map((row, i) => {
-    const member: SheetMember = { id: `sheet-${i}`, name: '', city: '', category: '' }
+    const member: SheetMember = { name: '', city: '', category: '' }
     normalizedHeaders.forEach((key, colIdx) => {
       const val = row[colIdx] != null ? String(row[colIdx]).trim() : ''
-      ;(member as Record<string, string | undefined>)[key] = val
+      member[key] = val
     })
     if (!member.name)     member.name     = `Member ${i + 1}`
     if (!member.city)     member.city     = 'Wisconsin'
@@ -81,10 +91,10 @@ async function fetchSheetMembers(): Promise<SheetMember[]> {
 }
 
 async function searchGooglePlaces(name: string, city: string): Promise<{
-  placeId?: string
-  rating?: number
-  photoUrl?: string
-  address?: string
+  placeId: string
+  rating: number | null
+  photoUrl: string
+  address: string
 } | null> {
   const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY
   if (!apiKey) return null
@@ -118,13 +128,13 @@ async function searchGooglePlaces(name: string, city: string): Promise<{
     const photoName = place.photos?.[0]?.name ?? null
     const photoUrl  = photoName
       ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
-      : undefined
+      : ''
 
     return {
-      placeId:  place.id,
-      rating:   place.rating,
+      placeId: place.id ?? '',
+      rating:  place.rating ?? null,
       photoUrl,
-      address:  place.formattedAddress,
+      address: place.formattedAddress ?? '',
     }
   } catch {
     return null
@@ -132,11 +142,11 @@ async function searchGooglePlaces(name: string, city: string): Promise<{
 }
 
 export default function MembersEnrichmentAdmin() {
-  const [running, setRunning]     = useState(false)
-  const [done, setDone]           = useState(false)
-  const [log, setLog]             = useState<LogEntry[]>([])
-  const [progress, setProgress]   = useState({ current: 0, total: 0 })
-  const [stats, setStats]         = useState({ found: 0, not_found: 0, error: 0, skipped: 0 })
+  const [running, setRunning]   = useState(false)
+  const [done, setDone]         = useState(false)
+  const [log, setLog]           = useState<LogEntry[]>([])
+  const [progress, setProgress] = useState({ current: 0, total: 0 })
+  const [stats, setStats]       = useState({ found: 0, not_found: 0, error: 0, skipped: 0 })
 
   function addLog(entry: LogEntry) {
     setLog(prev => [entry, ...prev])
@@ -152,17 +162,16 @@ export default function MembersEnrichmentAdmin() {
     setStats({ found: 0, not_found: 0, error: 0, skipped: 0 })
 
     try {
-      // Step 1: Check existing Firestore members to avoid re-processing
-      const existingSnap = await getDocs(collection(db, 'members'))
+      // Check existing Firestore members to avoid re-processing
+      const existingSnap  = await getDocs(collection(db, 'members'))
       const existingNames = new Set(
         existingSnap.docs.map(d => (d.data().name as string)?.toLowerCase().trim())
       )
 
-      // Step 2: Fetch sheet members
+      // Fetch sheet members
       const sheetMembers = await fetchSheetMembers()
       setProgress({ current: 0, total: sheetMembers.length })
 
-      // Step 3: Enrich each member
       for (let i = 0; i < sheetMembers.length; i++) {
         const member = sheetMembers[i]
         setProgress({ current: i + 1, total: sheetMembers.length })
@@ -176,27 +185,35 @@ export default function MembersEnrichmentAdmin() {
         // Search Google Places
         const places = await searchGooglePlaces(member.name, member.city)
 
-        const enriched: EnrichedMember = {
-          ...member,
-          wccc: true,
-          enriched: !!places,
+        const docId = member.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 60)
+
+        const firestoreDoc: FirestoreMember = {
+          id:          docId,
+          name:        member.name,
+          city:        member.city,
+          category:    member.category,
+          email:       member.email       ?? '',
+          phone:       member.phone       ?? '',
+          website:     member.website     ?? '',
+          photo:       member.photo       ?? '',
+          description: member.description ?? '',
+          wccc:        true,
+          enriched:    !!places,
+          placeId:     places?.placeId    ?? '',
+          rating:      places?.rating     ?? null,
+          googlePhoto: places?.photoUrl   ?? '',
+          address:     places?.address    ?? member.city + ', WI',
         }
 
+        await setDoc(doc(db, 'members', docId), firestoreDoc)
+
         if (places) {
-          enriched.placeId     = places.placeId
-          enriched.rating      = places.rating
-          enriched.googlePhoto = places.photoUrl
-          enriched.address     = places.address ?? member.city + ', WI'
-          addLog({ name: member.name, status: 'found', message: `⭐ ${places.rating ?? 'N/A'} · ${places.address ?? ''}` })
+          addLog({ name: member.name, status: 'found', message: `⭐ ${places.rating ?? 'N/A'} · ${places.address}` })
         } else {
           addLog({ name: member.name, status: 'not_found', message: 'Not found on Google Places — saved from sheet' })
         }
 
-        // Save to Firestore
-        const docId = member.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-')
-        await setDoc(doc(db, 'members', docId), enriched)
-
-        // Rate limit — 10 requests/second max for Places API
+        // Rate limit — stay under 10 req/sec for Places API
         await new Promise(r => setTimeout(r, 120))
       }
 
@@ -212,8 +229,7 @@ export default function MembersEnrichmentAdmin() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="rounded-xl p-4 space-y-2"
+      <div className="rounded-xl p-4 space-y-3"
         style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
         <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>
           📥 WCCC Member Enrichment
@@ -222,19 +238,14 @@ export default function MembersEnrichmentAdmin() {
           Reads all members from Google Sheet, enriches with Google Places data (photo, rating, address),
           and saves to Firestore with <code>wccc: true</code> flag. Run once.
         </p>
-
-        <button
-          onClick={runEnrichment}
-          disabled={running}
+        <button onClick={runEnrichment} disabled={running}
           className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40"
-          style={{ background: 'var(--color-red)', color: '#fff' }}
-        >
+          style={{ background: 'var(--color-red)', color: '#fff' }}>
           {running ? `⏳ Processing ${progress.current} / ${progress.total}...` : '▶ Run Enrichment'}
         </button>
-
         {done && (
           <p className="text-xs text-center font-semibold" style={{ color: '#22c55e' }}>
-            ✅ Enrichment complete! {progress.total} members processed.
+            ✅ Complete! {progress.total} members processed.
           </p>
         )}
       </div>
@@ -244,11 +255,11 @@ export default function MembersEnrichmentAdmin() {
         <div className="rounded-xl p-4 space-y-2"
           style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
           <div className="flex justify-between text-xs" style={{ color: 'var(--color-muted)' }}>
-            <span>Progress</span>
-            <span>{pct}%</span>
+            <span>Progress</span><span>{pct}%</span>
           </div>
           <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--color-bg)' }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: 'var(--color-red)' }} />
+            <div className="h-full rounded-full transition-all"
+              style={{ width: `${pct}%`, background: 'var(--color-red)' }} />
           </div>
         </div>
       )}
@@ -285,8 +296,7 @@ export default function MembersEnrichmentAdmin() {
                 <span className="text-xs flex-shrink-0" style={{
                   color: entry.status === 'found' ? '#22c55e'
                     : entry.status === 'not_found' ? '#fbbf24'
-                    : entry.status === 'skipped' ? '#60a5fa'
-                    : '#ef4444'
+                    : entry.status === 'skipped' ? '#60a5fa' : '#ef4444'
                 }}>
                   {entry.status === 'found' ? '✅' : entry.status === 'not_found' ? '⚠️' : entry.status === 'skipped' ? '⏭' : '❌'}
                 </span>
