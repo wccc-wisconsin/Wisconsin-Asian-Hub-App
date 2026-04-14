@@ -15,12 +15,16 @@ export function useAuth() {
   const [checking, setChecking] = useState(true)
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async u => {
+const unsub = onAuthStateChanged(auth, async u => {
+      console.log('Auth state changed:', u?.email ?? 'null')
       setUser(u)
       if (u?.email) {
+        console.log('Checking admin for:', u.email)
         const snap = await getDoc(doc(db, 'admins', u.email))
+        console.log('Is admin:', snap.exists())
         setIsAdmin(snap.exists())
       } else {
+        console.log('No user, setting isAdmin false')
         setIsAdmin(false)
       }
       setLoading(false)
