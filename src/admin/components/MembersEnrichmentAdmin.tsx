@@ -57,14 +57,21 @@ function normalizeKey(raw: string): string {
   return COLUMN_MAP[lower] ?? lower
 }
 
-// Simple similarity score — what % of words in original appear in matched name
+// Bidirectional similarity — checks both directions to avoid false matches
 function nameSimilarity(original: string, matched: string): number {
   const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim()
-  const origWords   = normalize(original).split(/\s+/).filter(w => w.length > 2)
-  const matchedNorm = normalize(matched)
-  if (origWords.length === 0) return 0
-  const hits = origWords.filter(w => matchedNorm.includes(w)).length
-  return hits / origWords.length
+  const stopWords = new Set(['of', 'the', 'and', 'inc', 'llc', 'co', 'ltd', 'corp', 'for'])
+  const origWords    = normalize(original).split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w))
+  const matchedWords = normalize(matched).split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w))
+  if (origWords.length === 0 || matchedWords.length === 0) return 0
+
+  // Forward: how many original words appear in matched
+  const forward  = origWords.filter(w => matchedWords.includes(w)).length / origWords.length
+  // Backward: how many matched words appear in original
+  const backward = matchedWords.filter(w => origWords.includes(w)).length / matchedWords.length
+
+  // Average of both directions — penalizes when one side has extra unmatched words
+  return (forward + backward) / 2
 }
 
 async function fetchSheetMembers(): Promise<SheetMember[]> {
@@ -157,13 +164,13 @@ async function searchGooglePlaces(name: string, city: string): Promise<{
 }
 
 export default function MembersEnrichmentAdmin() {
-  const [running, setRunning]   = useState(false)
-  const [done, setDone]         = useState(false)
-  const [log, setLog]           = useState<LogEntry[]>([])
-  const [progress, setProgress] = useState({ current: 0, total: 0 })
-  const [stats, setStats]       = useState({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
-  const [rerun, setRerun]       = useState(false)
-  const [threshold, setThreshold] = useState(0.5) // 50% word match required
+  const [running, setRunning]     = useState(false)
+  const [done, setDone]           = useState(false)
+  const [log, setLog]             = useState<LogEntry[]>([])
+  const [progress, setProgress]   = useState({ current: 0, total: 0 })
+  const [stats, setStats]         = useState({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
+  const [rerun, setRerun]         = useState(false)
+  const [threshold, setThreshold] = useState(0.5)
 
   function addLog(entry: LogEntry) {
     setLog(prev => [entry, ...prev])
@@ -206,7 +213,6 @@ export default function MembersEnrichmentAdmin() {
 
         const places = await searchGooglePlaces(member.name, member.city)
 
-        // Check name similarity
         let acceptedPlaces = places
         if (places) {
           const similarity = nameSimilarity(member.name, places.matchedName)
@@ -214,7 +220,7 @@ export default function MembersEnrichmentAdmin() {
             addLog({
               name: member.name,
               status: 'rejected',
-              message: `Google matched "${places.matchedName}" (${Math.round(similarity * 100)}% match — below ${Math.round(threshold * 100)}% threshold)`,
+              message: `Google matched "${places.matchedName}" (${Math.round(similarity * 100)}% — below ${Math.round(threshold * 100)}% threshold)`,
             })
             acceptedPlaces = null
           }
@@ -227,18 +233,18 @@ export default function MembersEnrichmentAdmin() {
           name:          member.name,
           city:          member.city,
           category:      member.category,
-          email:         member.email         ?? '',
-          phone:         member.phone         ?? '',
-          website:       member.website       ?? '',
-          photo:         member.photo         ?? '',
-          description:   member.description   ?? '',
+          email:         member.email       ?? '',
+          phone:         member.phone       ?? '',
+          website:       member.website     ?? '',
+          photo:         member.photo       ?? '',
+          description:   member.description ?? '',
           wccc:          true,
           enriched:      !!acceptedPlaces,
-          placeId:       acceptedPlaces?.placeId    ?? '',
-          rating:        acceptedPlaces?.rating     ?? null,
-          googlePhoto:   acceptedPlaces?.photoUrl   ?? '',
-          googleWebsite: acceptedPlaces?.website    ?? '',
-          address:       acceptedPlaces?.address    ?? member.city + ', WI',
+          placeId:       acceptedPlaces?.placeId  ?? '',
+          rating:        acceptedPlaces?.rating   ?? null,
+          googlePhoto:   acceptedPlaces?.photoUrl ?? '',
+          googleWebsite: acceptedPlaces?.website  ?? '',
+          address:       acceptedPlaces?.address  ?? member.city + ', WI',
         }
 
         await setDoc(doc(db, 'members', docId), firestoreDoc)
@@ -247,7 +253,7 @@ export default function MembersEnrichmentAdmin() {
           addLog({
             name: member.name,
             status: 'found',
-            message: `✅ "${places!.matchedName}" · ⭐ ${acceptedPlaces.rating ?? 'N/A'} · ${acceptedPlaces.website ? '🌐' : ''}`,
+            message: `"${places!.matchedName}" · ⭐ ${acceptedPlaces.rating ?? 'N/A'} · ${acceptedPlaces.website ? '🌐' : ''}`,
           })
         } else if (!places) {
           addLog({ name: member.name, status: 'not_found', message: 'Not found on Google Places' })
@@ -275,7 +281,7 @@ export default function MembersEnrichmentAdmin() {
         </h3>
         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
           Reads members from Google Sheet, enriches with Google Places (photo, rating, address, website),
-          and saves to Firestore. Only accepts matches where name similarity meets the threshold.
+          and saves to Firestore. Uses bidirectional name matching to avoid false matches.
         </p>
 
         {/* Similarity threshold */}
@@ -288,7 +294,7 @@ export default function MembersEnrichmentAdmin() {
             onChange={e => setThreshold(parseFloat(e.target.value))}
             className="w-full" />
           <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            Higher = stricter matching. 50% recommended.
+            Higher = stricter. 50% recommended for business names.
           </p>
         </div>
 
@@ -358,7 +364,10 @@ export default function MembersEnrichmentAdmin() {
               <div key={i} className="px-4 py-2 border-b flex items-start gap-3"
                 style={{ borderColor: 'var(--color-border)' }}>
                 <span className="text-xs flex-shrink-0">
-                  {entry.status === 'found' ? '✅' : entry.status === 'not_found' ? '⚠️' : entry.status === 'skipped' ? '⏭' : entry.status === 'rejected' ? '🚫' : '❌'}
+                  {entry.status === 'found'     ? '✅' :
+                   entry.status === 'not_found' ? '⚠️' :
+                   entry.status === 'skipped'   ? '⏭'  :
+                   entry.status === 'rejected'  ? '🚫' : '❌'}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{entry.name}</p>
