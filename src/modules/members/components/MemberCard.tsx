@@ -191,13 +191,7 @@ export default function MemberCard({ member }: MemberCardProps) {
               🗺️ Directions
             </a>
           )}
-          {websiteUrl && (
-            <a href={websiteUrl} target="_blank" rel="noopener noreferrer"
-              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
-              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
-              🌐 Visit
-            </a>
-          )}
+
           <button
             onClick={handleShare}
             className="flex-1 py-2 rounded-lg text-xs font-medium"
