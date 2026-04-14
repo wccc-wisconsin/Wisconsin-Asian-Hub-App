@@ -1,3 +1,4 @@
+import { useState, useRef, useLayoutEffect } from 'react'
 import type { Member } from '../../../hooks/useMembers'
 
 interface MemberCardProps {
@@ -7,46 +8,73 @@ interface MemberCardProps {
 export default function MemberCard({ member }: MemberCardProps) {
   const photo = member.googlePhoto || member.photo
   const initial = member.name.charAt(0).toUpperCase()
+  const [expanded, setExpanded] = useState(false)
+  const [isClamped, setIsClamped] = useState(false)
+  const descRef = useRef<HTMLParagraphElement>(null)
+
+  useLayoutEffect(() => {
+    const el = descRef.current
+    if (el) setIsClamped(el.scrollHeight > el.clientHeight + 2)
+  }, [member.description])
+
+  const directionsUrl = member.address
+    ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(member.address)}`
+    : null
+
+  const url = member.website
+    ? member.website.startsWith('http') ? member.website : `https://${member.website}`
+    : null
+
+  function handleShare() {
+    const text = `${member.name} — ${member.city}, WI\nhub.wcccbusinessnetwork.org`
+    if (navigator.share) {
+      navigator.share({ title: member.name, text })
+    } else {
+      navigator.clipboard.writeText(text)
+      alert('Copied!')
+    }
+  }
 
   return (
-    <article className="rounded-xl overflow-hidden" style={{
-      background: 'var(--color-surface)',
-      border: `1px solid ${member.wccc ? 'rgba(185,28,28,0.25)' : 'var(--color-border)'}`,
-    }}>
-      {/* Top accent */}
+    <article
+      className="rounded-xl overflow-hidden"
+      style={{
+        background: 'var(--color-surface)',
+        border: `1px solid ${member.wccc ? 'rgba(185,28,28,0.3)' : 'var(--color-border)'}`,
+      }}
+    >
+      {/* Top accent bar */}
       <div className="h-1" style={{
         background: member.wccc
           ? 'linear-gradient(90deg, #B91C1C, #ef4444)'
-          : 'var(--color-border)',
+          : 'linear-gradient(90deg, #6b7280, #9ca3af)',
       }} />
 
-      <div className="p-4 space-y-3">
-        {/* Header */}
-        <div className="flex gap-3 items-start">
-          <div className="w-12 h-12 rounded-lg flex-shrink-0 overflow-hidden flex items-center justify-center text-lg font-bold text-white"
-            style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}>
-            {photo ? (
-              <img src={photo} alt={member.name} className="w-full h-full object-cover" />
-            ) : initial}
+      {/* Photo */}
+      <div
+        className="w-full flex items-center justify-center"
+        style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
+      >
+        {photo ? (
+          <img
+            src={photo}
+            alt={member.name}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center' }}
+          />
+        ) : (
+          <div
+            className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
+            style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
+          >
+            {initial}
           </div>
+        )}
+      </div>
 
-          <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm leading-tight truncate" style={{ color: 'var(--color-text)' }}>
-              {member.name}
-            </h3>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
-              {member.city}{member.city ? ', ' : ''}WI
-            </p>
-            {member.rating && (
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-gold)' }}>
-                ⭐ {member.rating.toFixed(1)}
-              </p>
-            )}
-          </div>
-        </div>
-
+      {/* Body */}
+      <div className="p-4 space-y-2">
         {/* Badges */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
           {member.wccc && (
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: 'rgba(185,28,28,0.15)', color: '#ef4444' }}>
@@ -61,51 +89,81 @@ export default function MemberCard({ member }: MemberCardProps) {
           )}
         </div>
 
-        {/* Description */}
-        {member.description && (
-          <p className="text-xs" style={{
-            color: 'var(--color-muted)',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {member.description}
+        {/* Name */}
+        {url ? (
+          <a href={url} target="_blank" rel="noopener noreferrer">
+            <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
+              {member.name} <span className="text-xs" style={{ color: 'var(--color-muted)' }}>↗</span>
+            </h3>
+          </a>
+        ) : (
+          <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
+            {member.name}
+          </h3>
+        )}
+
+        <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+          📍 {member.city}{member.city ? ', ' : ''}WI
+        </p>
+
+        {member.rating && (
+          <p className="text-xs" style={{ color: 'var(--color-gold)' }}>
+            ⭐ {member.rating.toFixed(1)}
           </p>
         )}
 
-        {/* Address */}
-        {member.address && (
-          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            📍 {member.address}
-          </p>
+        {/* Description */}
+        {member.description && (
+          <div>
+            <p
+              ref={descRef}
+              className="text-xs"
+              style={{
+                color: 'var(--color-muted)',
+                display: '-webkit-box',
+                WebkitLineClamp: expanded ? 'unset' : 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: expanded ? 'visible' : 'hidden',
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {member.description}
+            </p>
+            {(isClamped || expanded) && (
+              <button
+                onClick={() => setExpanded(e => !e)}
+                className="text-xs mt-1 font-medium"
+                style={{ color: 'var(--color-red)' }}
+              >
+                {expanded ? 'Show less ↑' : 'Read more ↓'}
+              </button>
+            )}
+          </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 pt-1">
           {member.phone && (
             <a href={`tel:${member.phone}`}
-              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-center"
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
               style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
               📞 Call
             </a>
           )}
-          {member.website && (
-            <a href={member.website.startsWith('http') ? member.website : `https://${member.website}`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-center"
+          {directionsUrl && (
+            <a href={directionsUrl} target="_blank" rel="noopener noreferrer"
+              className="flex-1 py-2 rounded-lg text-xs font-medium text-center"
               style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
-              🌐 Visit
+              🗺️ Directions
             </a>
           )}
-          {member.address && (
-            <a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(member.address)}`}
-              target="_blank" rel="noopener noreferrer"
-              className="flex-1 py-1.5 rounded-lg text-xs font-medium text-center"
-              style={{ background: 'var(--color-bg)', color: 'var(--color-text)', border: '1px solid var(--color-border)' }}>
-              🗺️ Map
-            </a>
-          )}
+          <button
+            onClick={handleShare}
+            className="flex-1 py-2 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}
+          >
+            📤 Share
+          </button>
         </div>
       </div>
     </article>
