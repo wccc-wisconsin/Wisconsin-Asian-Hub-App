@@ -6,8 +6,6 @@ interface MemberCardProps {
 }
 
 export default function MemberCard({ member }: MemberCardProps) {
-  const photo = member.googlePhoto || member.photo
-  const initial = member.name.charAt(0).toUpperCase()
   const [expanded, setExpanded] = useState(false)
   const [isClamped, setIsClamped] = useState(false)
   const descRef = useRef<HTMLParagraphElement>(null)
@@ -21,18 +19,15 @@ export default function MemberCard({ member }: MemberCardProps) {
     ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(member.address)}`
     : null
 
-  // Website URL
   const rawWebsite = member.googleWebsite || member.website
   const websiteUrl = rawWebsite
     ? rawWebsite.startsWith('http') ? rawWebsite : `https://${rawWebsite}`
     : null
 
-  // Google Maps Business Profile URL
   const googleMapsUrl = member.placeId
     ? `https://www.google.com/maps/place/?q=place_id:${member.placeId}`
     : null
 
-  // Primary link — website first, Google Maps profile as fallback
   const primaryUrl = websiteUrl || googleMapsUrl
 
   function handleShare() {
@@ -60,51 +55,6 @@ export default function MemberCard({ member }: MemberCardProps) {
           : 'linear-gradient(90deg, #6b7280, #9ca3af)',
       }} />
 
-      {/* Photo — links to primary URL */}
-      {primaryUrl ? (
-        <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
-          <div
-            className="w-full flex items-center justify-center"
-            style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
-          >
-            {photo ? (
-              <img
-                src={photo}
-                alt={member.name}
-                style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
-              />
-            ) : (
-              <div
-                className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
-                style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
-              >
-                {initial}
-              </div>
-            )}
-          </div>
-        </a>
-      ) : (
-        <div
-          className="w-full flex items-center justify-center"
-          style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
-        >
-          {photo ? (
-            <img
-              src={photo}
-              alt={member.name}
-              style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', padding: '8px' }}
-            />
-          ) : (
-            <div
-              className="w-20 h-20 rounded-2xl flex items-center justify-center text-4xl font-bold text-white"
-              style={{ background: member.wccc ? 'var(--color-red)' : 'var(--color-muted)' }}
-            >
-              {initial}
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Body */}
       <div className="p-4 space-y-2">
         {/* Badges */}
@@ -123,7 +73,7 @@ export default function MemberCard({ member }: MemberCardProps) {
           )}
         </div>
 
-        {/* Name — links to primary URL */}
+        {/* Name */}
         {primaryUrl ? (
           <a href={primaryUrl} target="_blank" rel="noopener noreferrer">
             <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
@@ -191,7 +141,6 @@ export default function MemberCard({ member }: MemberCardProps) {
               🗺️ Directions
             </a>
           )}
-
           <button
             onClick={handleShare}
             className="flex-1 py-2 rounded-lg text-xs font-medium"
