@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, doc, setDoc, getDocs, deleteDoc, onSnapshot, updateDoc, query } from 'firebase/firestore'
+import { collection, doc, setDoc, getDocs, deleteDoc, onSnapshot, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 import type { Member } from '../../hooks/useMembers'
 
@@ -39,17 +39,6 @@ function normalizeKey(raw: string): string {
   return COLUMN_MAP[lower] ?? lower
 }
 
-function nameSimilarity(original: string, matched: string): number {
-  const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim()
-  const stopWords = new Set(['of', 'the', 'and', 'inc', 'llc', 'co', 'ltd', 'corp', 'for'])
-  const origWords    = normalize(original).split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w))
-  const matchedWords = normalize(matched).split(/\s+/).filter(w => w.length > 2 && !stopWords.has(w))
-  if (origWords.length === 0 || matchedWords.length === 0) return 0
-  const forward  = origWords.filter(w => matchedWords.includes(w)).length / origWords.length
-  const backward = matchedWords.filter(w => origWords.includes(w)).length / matchedWords.length
-  return (forward + backward) / 2
-}
-
 async function fetchSheetMembers(): Promise<SheetMember[]> {
   const sheetId   = import.meta.env.VITE_SHEET_ID
   const apiKey    = import.meta.env.VITE_SHEETS_API_KEY
@@ -75,90 +64,29 @@ async function fetchSheetMembers(): Promise<SheetMember[]> {
   }).filter(m => m.name.trim() !== '')
 }
 
-async function searchGooglePlaces(name: string, city: string): Promise<{
-  placeId: string; matchedName: string; rating: number | null
-  photoUrl: string; address: string; website: string
-} | null> {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY
-  if (!apiKey) return null
-  try {
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.photos,places.formattedAddress,places.websiteUri',
-      },
-      body: JSON.stringify({ textQuery: `${name} ${city} Wisconsin`, maxResultCount: 1 }),
-    })
-    const data = await res.json() as {
-      places?: Array<{
-        id?: string; displayName?: { text: string }; rating?: number
-        formattedAddress?: string; websiteUri?: string; photos?: Array<{ name: string }>
-      }>
-    }
-    const place = data.places?.[0]
-    if (!place) return null
-    const photoName = place.photos?.[0]?.name ?? null
-    return {
-      placeId:     place.id ?? '',
-      matchedName: place.displayName?.text ?? '',
-      rating:      place.rating ?? null,
-      photoUrl:    photoName ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}` : '',
-      address:     place.formattedAddress ?? '',
-      website:     place.websiteUri ?? '',
-    }
-  } catch { return null }
-}
-
+// Member row — edit name/city/delete only, no Google Places calls
 function MemberRow({ member }: { member: Member }) {
-  const [refreshing, setRefreshing] = useState(false)
-  const [msg, setMsg]               = useState('')
-  const [editing, setEditing]       = useState(false)
-  const [searchName, setSearchName] = useState(member.name)
-  const [searchCity, setSearchCity] = useState(member.city)
-  const [photoUrl, setPhotoUrl]     = useState(member.googlePhoto || '')
+  const [msg, setMsg]           = useState('')
+  const [editing, setEditing]   = useState(false)
+  const [name, setName]         = useState(member.name)
+  const [city, setCity]         = useState(member.city)
+  const [category, setCategory] = useState(member.category ?? '')
+  const [saving, setSaving]     = useState(false)
 
-  const isPending      = (member as any).status === 'pending'
-  const originalPhoto  = member.googlePhoto || ''
-  const photoChanged   = photoUrl !== originalPhoto
+  const isPending = (member as any).status === 'pending'
 
-  async function handleRefresh() {
-    setRefreshing(true)
-    setMsg('')
-    const places = await searchGooglePlaces(searchName, searchCity)
-    if (places) {
-      const similarity = nameSimilarity(searchName, places.matchedName)
-      if (similarity >= 0.4) {
-        await updateDoc(doc(db, 'members', member.id), {
-          name:          searchName,
-          city:          searchCity,
-          placeId:       places.placeId,
-          rating:        places.rating,
-          googlePhoto:   places.photoUrl,
-          googleWebsite: places.website,
-          address:       places.address,
-          enriched:      true,
-        })
-        setPhotoUrl(places.photoUrl)
-        setMsg(`✅ Updated · ⭐ ${places.rating ?? 'N/A'} · "${places.matchedName}"`)
-        setEditing(false)
-      } else {
-        setMsg(`🚫 Rejected · "${places.matchedName}" (${Math.round(similarity * 100)}% match) — try a different name`)
-      }
-    } else {
-      setMsg('⚠️ Not found on Google Places — try a different name')
-    }
-    setRefreshing(false)
-  }
-
-  async function handleSavePhoto() {
-    await updateDoc(doc(db, 'members', member.id), { googlePhoto: photoUrl })
-    setMsg('✅ Photo updated')
+  async function handleSave() {
+    setSaving(true)
+    const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore')
+    await updateDoc(firestoreDoc(db, 'members', member.id), { name, city, category })
+    setMsg('✅ Saved')
+    setEditing(false)
+    setSaving(false)
   }
 
   async function handleApprove() {
-    await updateDoc(doc(db, 'members', member.id), { status: 'approved', wccc: false })
+    const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore')
+    await updateDoc(firestoreDoc(db, 'members', member.id), { status: 'approved', wccc: false })
   }
 
   async function handleDelete() {
@@ -177,13 +105,7 @@ function MemberRow({ member }: { member: Member }) {
       background: 'var(--color-surface)',
       border: `1px solid ${isPending ? 'rgba(251,191,36,0.3)' : member.wccc ? 'rgba(185,28,28,0.2)' : 'var(--color-border)'}`,
     }}>
-      {/* Header row */}
       <div className="flex items-center gap-3">
-        {(member.googlePhoto || member.photo) && (
-          <img src={member.googlePhoto || member.photo} alt={member.name}
-            className="w-10 h-10 rounded-lg flex-shrink-0"
-            style={{ objectFit: 'contain', background: 'var(--color-bg)' }} />
-        )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{member.name}</p>
           <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
@@ -208,48 +130,20 @@ function MemberRow({ member }: { member: Member }) {
         </div>
       </div>
 
-      {/* Editable fields */}
       {editing && (
         <div className="space-y-2 pt-1">
-          <div>
-            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>Search name (for Google Places)</p>
-            <input value={searchName} onChange={e => setSearchName(e.target.value)}
-              placeholder="Business name to search" style={inp} />
-          </div>
-          <div>
-            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>City</p>
-            <input value={searchCity} onChange={e => setSearchCity(e.target.value)}
-              placeholder="City" style={inp} />
-          </div>
-          <div>
-            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>Photo URL (paste to override)</p>
-            <input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)}
-              placeholder="https://..." style={inp} />
-          </div>
-          {photoUrl && (
-            <img src={photoUrl} alt="preview" className="rounded-lg"
-              style={{ width: 80, height: 80, objectFit: 'contain', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }} />
-          )}
-          <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            Edit name/city to improve Google matching, or paste a photo URL directly.
-          </p>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Business name" style={inp} />
+          <input value={city} onChange={e => setCity(e.target.value)} placeholder="City" style={inp} />
+          <input value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" style={inp} />
+          <button onClick={handleSave} disabled={saving}
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40"
+            style={{ background: 'var(--color-red)', color: '#fff' }}>
+            {saving ? '...' : '💾 Save'}
+          </button>
         </div>
       )}
 
-      {/* Action buttons */}
       <div className="flex gap-2 flex-wrap">
-        <button onClick={handleRefresh} disabled={refreshing}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
-          style={{ background: 'rgba(66,133,244,0.15)', color: '#4285f4', border: '1px solid rgba(66,133,244,0.3)' }}>
-          {refreshing ? '⏳' : '🔄'} Refresh from Google
-        </button>
-        {photoChanged && (
-          <button onClick={handleSavePhoto}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium"
-            style={{ background: 'rgba(124,58,237,0.15)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.3)' }}>
-            💾 Save Photo
-          </button>
-        )}
         {isPending && (
           <button onClick={handleApprove}
             className="px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -263,7 +157,6 @@ function MemberRow({ member }: { member: Member }) {
           🗑 Delete
         </button>
       </div>
-
       {msg && <p className="text-xs" style={{ color: 'var(--color-muted)' }}>{msg}</p>}
     </div>
   )
@@ -274,9 +167,8 @@ export default function MembersEnrichmentAdmin() {
   const [done, setDone]                 = useState(false)
   const [log, setLog]                   = useState<LogEntry[]>([])
   const [progress, setProgress]         = useState({ current: 0, total: 0 })
-  const [stats, setStats]               = useState({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
+  const [stats, setStats]               = useState({ saved: 0, skipped: 0, error: 0 })
   const [rerun, setRerun]               = useState(false)
-  const [threshold, setThreshold]       = useState(0.5)
   const [members, setMembers]           = useState<Member[]>([])
   const [view, setView]                 = useState<'bulk' | 'records'>('bulk')
   const [memberSearch, setMemberSearch] = useState('')
@@ -291,23 +183,25 @@ export default function MembersEnrichmentAdmin() {
 
   function addLog(entry: LogEntry) {
     setLog(prev => [entry, ...prev])
-    setStats(prev => ({ ...prev, [entry.status]: (prev[entry.status] ?? 0) + 1 }))
+    setStats(prev => ({ ...prev, [entry.status === 'found' ? 'saved' : entry.status === 'skipped' ? 'skipped' : 'error']: (prev[entry.status === 'found' ? 'saved' : entry.status === 'skipped' ? 'skipped' : 'error'] ?? 0) + 1 }))
   }
 
   async function runEnrichment() {
     const msg = rerun
-      ? 'This will DELETE all existing members and re-enrich from scratch. Continue?'
-      : 'Load all WCCC members from Google Sheet and enrich with Google Places. Continue?'
+      ? 'This will DELETE all existing WCCC members and reload from Google Sheet. Continue?'
+      : 'Load all WCCC members from Google Sheet and save to Firestore. Continue?'
     if (!confirm(msg)) return
     setRunning(true)
     setDone(false)
     setLog([])
-    setStats({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
+    setStats({ saved: 0, skipped: 0, error: 0 })
 
     try {
       if (rerun) {
         const existingSnap = await getDocs(collection(db, 'members'))
-        for (const d of existingSnap.docs) await deleteDoc(d.ref)
+        for (const d of existingSnap.docs) {
+          if (d.data().wccc === true) await deleteDoc(d.ref)
+        }
       }
       const existingSnap  = await getDocs(collection(db, 'members'))
       const existingNames = new Set(existingSnap.docs.map(d => (d.data().name as string)?.toLowerCase().trim()))
@@ -323,39 +217,18 @@ export default function MembersEnrichmentAdmin() {
           continue
         }
 
-        const places = await searchGooglePlaces(member.name, member.city)
-        let acceptedPlaces = places
-        if (places) {
-          const similarity = nameSimilarity(member.name, places.matchedName)
-          if (similarity < threshold) {
-            addLog({ name: member.name, status: 'rejected',
-              message: `Google matched "${places.matchedName}" (${Math.round(similarity * 100)}% — below ${Math.round(threshold * 100)}% threshold)` })
-            acceptedPlaces = null
-          }
-        }
-
         const docId = member.name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').slice(0, 60)
         await setDoc(doc(db, 'members', docId), {
           id: docId, name: member.name, city: member.city, category: member.category,
           email: member.email ?? '', phone: member.phone ?? '',
           website: member.website ?? '', photo: member.photo ?? '',
           description: member.description ?? '',
-          wccc: true, enriched: !!acceptedPlaces,
-          placeId:       acceptedPlaces?.placeId  ?? '',
-          rating:        acceptedPlaces?.rating   ?? null,
-          googlePhoto:   acceptedPlaces?.photoUrl ?? '',
-          googleWebsite: acceptedPlaces?.website  ?? '',
-          address:       acceptedPlaces?.address  ?? member.city + ', WI',
+          wccc: true, enriched: false,
+          placeId: '', rating: null,
+          googlePhoto: '', googleWebsite: '', address: member.city + ', WI',
         })
-
-        if (acceptedPlaces) {
-          addLog({ name: member.name, status: 'found',
-            message: `"${places!.matchedName}" · ⭐ ${acceptedPlaces.rating ?? 'N/A'} · ${acceptedPlaces.website ? '🌐' : ''}` })
-        } else if (!places) {
-          addLog({ name: member.name, status: 'not_found', message: 'Not found on Google Places' })
-        }
-
-        await new Promise(r => setTimeout(r, 120))
+        addLog({ name: member.name, status: 'found', message: 'Saved from sheet' })
+        await new Promise(r => setTimeout(r, 50))
       }
       setDone(true)
     } catch (err) {
@@ -374,7 +247,6 @@ export default function MembersEnrichmentAdmin() {
 
   return (
     <div className="space-y-4">
-      {/* View toggle */}
       <div className="flex gap-2">
         {(['bulk', 'records'] as const).map(v => (
           <button key={v} onClick={() => setView(v)}
@@ -384,43 +256,32 @@ export default function MembersEnrichmentAdmin() {
               color: view === v ? '#fff' : 'var(--color-muted)',
               border: `1px solid ${view === v ? 'var(--color-red)' : 'var(--color-border)'}`,
             }}>
-            {v === 'bulk' ? '📥 Bulk Enrichment' : `📋 Records (${members.length})`}
+            {v === 'bulk' ? '📥 Bulk Import' : `📋 Records (${members.length})`}
           </button>
         ))}
       </div>
 
-      {/* BULK VIEW */}
       {view === 'bulk' && (
         <div className="space-y-4">
           <div className="rounded-xl p-4 space-y-3"
             style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
-            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>📥 WCCC Member Enrichment</h3>
+            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>📥 WCCC Member Import</h3>
             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-              Reads members from Google Sheet, enriches with Google Places (photo, rating, address, website).
-              Uses bidirectional name matching to avoid false matches.
+              Reads all members from Google Sheet and saves to Firestore with <code>wccc: true</code> flag.
+              Google Places enrichment is disabled to save API costs.
             </p>
-
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs" style={{ color: 'var(--color-muted)' }}>
-                <span>Name match threshold</span>
-                <span style={{ color: 'var(--color-gold)' }}>{Math.round(threshold * 100)}%</span>
-              </div>
-              <input type="range" min={0.2} max={1} step={0.1} value={threshold}
-                onChange={e => setThreshold(parseFloat(e.target.value))} className="w-full" />
-              <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Higher = stricter. 50% recommended.</p>
-            </div>
 
             <label className="flex items-center gap-2 cursor-pointer">
               <input type="checkbox" checked={rerun} onChange={e => setRerun(e.target.checked)} />
               <span className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                ⚠️ Re-run from scratch (deletes existing members first)
+                ⚠️ Re-run (deletes existing WCCC members and reimports from sheet)
               </span>
             </label>
 
             <button onClick={runEnrichment} disabled={running}
               className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40"
               style={{ background: 'var(--color-red)', color: '#fff' }}>
-              {running ? `⏳ Processing ${progress.current} / ${progress.total}...` : '▶ Run Enrichment'}
+              {running ? `⏳ Processing ${progress.current} / ${progress.total}...` : '▶ Import from Sheet'}
             </button>
             {done && <p className="text-xs text-center font-semibold" style={{ color: '#22c55e' }}>✅ Complete! {progress.total} members processed.</p>}
           </div>
@@ -438,13 +299,11 @@ export default function MembersEnrichmentAdmin() {
           )}
 
           {log.length > 0 && (
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               {[
-                { label: 'Found',    count: stats.found,     color: '#22c55e' },
-                { label: 'Rejected', count: stats.rejected,  color: '#f97316' },
-                { label: 'No Match', count: stats.not_found, color: '#fbbf24' },
-                { label: 'Skipped',  count: stats.skipped,   color: '#60a5fa' },
-                { label: 'Errors',   count: stats.error,     color: '#ef4444' },
+                { label: 'Saved',   count: stats.saved,   color: '#22c55e' },
+                { label: 'Skipped', count: stats.skipped, color: '#60a5fa' },
+                { label: 'Errors',  count: stats.error,   color: '#ef4444' },
               ].map(s => (
                 <div key={s.label} className="rounded-xl p-3 text-center"
                   style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
@@ -459,15 +318,14 @@ export default function MembersEnrichmentAdmin() {
             <div className="rounded-xl overflow-hidden"
               style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}>
               <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
-                <p className="text-xs font-semibold" style={{ color: 'var(--color-muted)' }}>Processing Log</p>
+                <p className="text-xs font-semibold" style={{ color: 'var(--color-muted)' }}>Log</p>
               </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 400 }}>
+              <div className="overflow-y-auto" style={{ maxHeight: 300 }}>
                 {log.map((entry, i) => (
                   <div key={i} className="px-4 py-2 border-b flex items-start gap-3"
                     style={{ borderColor: 'var(--color-border)' }}>
                     <span className="text-xs flex-shrink-0">
-                      {entry.status === 'found' ? '✅' : entry.status === 'not_found' ? '⚠️' :
-                       entry.status === 'skipped' ? '⏭' : entry.status === 'rejected' ? '🚫' : '❌'}
+                      {entry.status === 'found' ? '✅' : entry.status === 'skipped' ? '⏭' : '❌'}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate" style={{ color: 'var(--color-text)' }}>{entry.name}</p>
@@ -481,7 +339,6 @@ export default function MembersEnrichmentAdmin() {
         </div>
       )}
 
-      {/* RECORDS VIEW */}
       {view === 'records' && (
         <div className="space-y-4">
           {pending.length > 0 && (

@@ -1,36 +1,7 @@
 import { useState } from 'react'
-import { updateDoc, doc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
 import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeeklyDeal, submitRestaurant, type Restaurant, type Cuisine } from '../../hooks/useDine'
 
 const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
-
-async function fetchPlacesData(name: string, city: string): Promise<{ rating?: number; photoUrl?: string } | null> {
-  try {
-    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_KEY
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': apiKey,
-        'X-Goog-FieldMask': 'places.id,places.displayName,places.rating,places.photos',
-      },
-      body: JSON.stringify({ textQuery: `${name} ${city} Wisconsin`, maxResultCount: 1 }),
-    })
-    const data = await res.json()
-    const place = data.places?.[0]
-    if (!place) return null
-    const photoName = place.photos?.[0]?.name ?? null
-return {
-  rating: place.rating ?? undefined,
-  photoUrl: photoName
-    ? `https://places.googleapis.com/v1/${photoName}/media?maxWidthPx=800&key=${apiKey}`
-    : undefined,
-}
-  } catch {
-    return null
-  }
-}
 
 function AddWDAForm({ onClose }: { onClose: () => void }) {
   const [name, setName]       = useState('')
@@ -111,28 +82,6 @@ function AddWDAForm({ onClose }: { onClose: () => void }) {
 function RestaurantRow({ r }: { r: Restaurant }) {
   const [deal, setDeal]           = useState(r.weeklyDeal ?? '')
   const [editingDeal, setEditing] = useState(false)
-  const [fetchingPlaces, setFetching] = useState(false)
-  const [placesMsg, setPlacesMsg] = useState('')
-
-  async function handleFetchPlaces() {
-    setFetching(true)
-    setPlacesMsg('')
-    const data = await fetchPlacesData(r.name, r.city)
-    if (data) {
-      const updates: Partial<Restaurant> = {}
-      if (data.rating) updates.rating = data.rating
-      if (data.photoUrl) updates.photoUrl = data.photoUrl
-      if (Object.keys(updates).length > 0) {
-        await updateDoc(doc(db, 'restaurants', r.id), updates)
-        setPlacesMsg(`✅ Updated: ${data.rating ? `⭐ ${data.rating}` : ''} ${data.photoUrl ? '📸 photo' : ''}`)
-      } else {
-        setPlacesMsg('⚠️ No data found on Google Places')
-      }
-    } else {
-      setPlacesMsg('❌ Failed to fetch from Google Places')
-    }
-    setFetching(false)
-  }
 
   return (
     <div className="rounded-xl p-4 space-y-3" style={{
@@ -169,20 +118,6 @@ function RestaurantRow({ r }: { r: Restaurant }) {
             <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>Submitted by: {r.submittedBy}</p>
           )}
         </div>
-        {r.photoUrl && (
-          <img src={r.photoUrl} alt={r.name} className="rounded-lg object-cover flex-shrink-0"
-            style={{ width: 56, height: 56, objectFit: r.isLogo ? 'contain' : 'cover' }} />
-        )}
-      </div>
-
-      {/* Google Places fetch */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <button onClick={handleFetchPlaces} disabled={fetchingPlaces}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
-          style={{ background: 'rgba(66,133,244,0.15)', color: '#4285f4', border: '1px solid rgba(66,133,244,0.3)' }}>
-          {fetchingPlaces ? '⏳ Fetching...' : '🔍 Fetch Google Rating & Photo'}
-        </button>
-        {placesMsg && <span className="text-xs" style={{ color: 'var(--color-muted)' }}>{placesMsg}</span>}
       </div>
 
       {/* Weekly deal */}
@@ -242,7 +177,6 @@ export default function DineAdmin() {
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
         {[
           { label: 'Pending',  count: pending.length,  color: '#fbbf24' },
@@ -257,7 +191,6 @@ export default function DineAdmin() {
         ))}
       </div>
 
-      {/* Add WDA restaurant */}
       {showAddWDA
         ? <AddWDAForm onClose={() => setShowAddWDA(false)} />
         : (
@@ -271,22 +204,16 @@ export default function DineAdmin() {
 
       {loading && <p className="text-sm text-center" style={{ color: 'var(--color-muted)' }}>Loading...</p>}
 
-      {/* Pending */}
       {pending.length > 0 && (
         <div>
-          <h3 className="font-display font-semibold text-sm mb-3" style={{ color: '#fbbf24' }}>
-            ⏳ Pending Review
-          </h3>
+          <h3 className="font-display font-semibold text-sm mb-3" style={{ color: '#fbbf24' }}>⏳ Pending Review</h3>
           <div className="space-y-3">{pending.map(r => <RestaurantRow key={r.id} r={r} />)}</div>
         </div>
       )}
 
-      {/* Approved */}
       {approved.length > 0 && (
         <div>
-          <h3 className="font-display font-semibold text-sm mb-3" style={{ color: '#22c55e' }}>
-            ✅ Live Restaurants
-          </h3>
+          <h3 className="font-display font-semibold text-sm mb-3" style={{ color: '#22c55e' }}>✅ Live Restaurants</h3>
           <div className="space-y-3">{approved.map(r => <RestaurantRow key={r.id} r={r} />)}</div>
         </div>
       )}
