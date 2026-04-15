@@ -16,40 +16,6 @@ interface RestaurantCardProps {
   onOpen: () => void
 }
 
-function PhotoArea({ restaurant, onOpen }: { restaurant: Restaurant; onOpen: () => void }) {
-  if (!restaurant.photoUrl) {
-    return (
-      <div
-        onClick={onOpen}
-        className="w-full flex items-center justify-center text-4xl cursor-pointer"
-        style={{ height: 160, background: 'var(--color-bg)' }}
-      >
-        {CUISINE_ICONS[restaurant.cuisine] ?? '🍽️'}
-      </div>
-    )
-  }
-
-  return (
-    <div
-      onClick={onOpen}
-      className="w-full flex items-center justify-center cursor-pointer"
-      style={{ height: 160, background: 'var(--color-bg)', overflow: 'hidden' }}
-    >
-      <img
-        src={restaurant.photoUrl}
-        alt={restaurant.name}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: restaurant.isLogo ? 'contain' : 'cover',
-          objectPosition: 'center',
-          padding: restaurant.isLogo ? '16px' : '0',
-        }}
-      />
-    </div>
-  )
-}
-
 export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardProps) {
   const isWCCC = restaurant.affiliation === 'wccc'
   const [expanded, setExpanded] = useState(false)
@@ -80,9 +46,6 @@ export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardPro
           : 'linear-gradient(90deg, #d97706, #fbbf24)',
       }} />
 
-      {/* Photo — tap to open detail */}
-      <PhotoArea restaurant={restaurant} onOpen={onOpen} />
-
       {/* Body */}
       <div className="p-4 space-y-2">
         {/* Badges */}
@@ -107,7 +70,7 @@ export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardPro
           )}
         </div>
 
-        {/* Name — tap to open detail */}
+        {/* Name */}
         <button onClick={onOpen} className="text-left w-full">
           <h3 className="font-semibold text-base leading-tight" style={{ color: 'var(--color-text)' }}>
             {restaurant.name}
@@ -133,7 +96,7 @@ export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardPro
           </div>
         )}
 
-        {/* Description with expand/collapse */}
+        {/* Description */}
         {restaurant.description && (
           <div>
             <p ref={descRef} className="text-xs" style={{
@@ -172,20 +135,20 @@ export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardPro
               🗺️ Directions
             </a>
           )}
-<button
-  onClick={() => {
-    const url = `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`
-    if (navigator.share) {
-      navigator.share({ title: restaurant.name, url })
-    } else {
-      navigator.clipboard.writeText(url)
-      alert('Link copied!')
-    }
-  }}
-  className="flex-1 py-2 rounded-lg text-xs font-medium"
-  style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}>
-  📤 Share
-</button>
+          <button
+            onClick={() => {
+              const url = `https://hub.wcccbusinessnetwork.org/dine/${restaurant.id}`
+              if (navigator.share) {
+                navigator.share({ title: restaurant.name, url })
+              } else {
+                navigator.clipboard.writeText(url)
+                alert('Link copied!')
+              }
+            }}
+            className="flex-1 py-2 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(185,28,28,0.1)', border: '1px solid rgba(185,28,28,0.2)', color: 'var(--color-red)' }}>
+            📤 Share
+          </button>
         </div>
       </div>
     </article>
