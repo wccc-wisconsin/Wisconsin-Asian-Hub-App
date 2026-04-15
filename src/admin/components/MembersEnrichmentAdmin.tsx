@@ -111,15 +111,17 @@ async function searchGooglePlaces(name: string, city: string): Promise<{
   } catch { return null }
 }
 
-// Per-record refresh row
 function MemberRow({ member }: { member: Member }) {
   const [refreshing, setRefreshing] = useState(false)
   const [msg, setMsg]               = useState('')
   const [editing, setEditing]       = useState(false)
   const [searchName, setSearchName] = useState(member.name)
   const [searchCity, setSearchCity] = useState(member.city)
+  const [photoUrl, setPhotoUrl]     = useState(member.googlePhoto || '')
 
-  const isPending = (member as any).status === 'pending'
+  const isPending      = (member as any).status === 'pending'
+  const originalPhoto  = member.googlePhoto || ''
+  const photoChanged   = photoUrl !== originalPhoto
 
   async function handleRefresh() {
     setRefreshing(true)
@@ -138,6 +140,7 @@ function MemberRow({ member }: { member: Member }) {
           address:       places.address,
           enriched:      true,
         })
+        setPhotoUrl(places.photoUrl)
         setMsg(`✅ Updated · ⭐ ${places.rating ?? 'N/A'} · "${places.matchedName}"`)
         setEditing(false)
       } else {
@@ -147,6 +150,11 @@ function MemberRow({ member }: { member: Member }) {
       setMsg('⚠️ Not found on Google Places — try a different name')
     }
     setRefreshing(false)
+  }
+
+  async function handleSavePhoto() {
+    await updateDoc(doc(db, 'members', member.id), { googlePhoto: photoUrl })
+    setMsg('✅ Photo updated')
   }
 
   async function handleApprove() {
@@ -159,9 +167,9 @@ function MemberRow({ member }: { member: Member }) {
   }
 
   const inp = {
-    flex: 1, padding: '6px 10px', borderRadius: 8, fontSize: 12, outline: 'none',
+    width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, outline: 'none',
     border: '1px solid var(--color-border)', background: 'var(--color-bg)',
-    color: 'var(--color-text)',
+    color: 'var(--color-text)', boxSizing: 'border-box' as const,
   }
 
   return (
@@ -169,10 +177,12 @@ function MemberRow({ member }: { member: Member }) {
       background: 'var(--color-surface)',
       border: `1px solid ${isPending ? 'rgba(251,191,36,0.3)' : member.wccc ? 'rgba(185,28,28,0.2)' : 'var(--color-border)'}`,
     }}>
+      {/* Header row */}
       <div className="flex items-center gap-3">
         {(member.googlePhoto || member.photo) && (
           <img src={member.googlePhoto || member.photo} alt={member.name}
-            className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
+            className="w-10 h-10 rounded-lg flex-shrink-0"
+            style={{ objectFit: 'contain', background: 'var(--color-bg)' }} />
         )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{member.name}</p>
@@ -192,43 +202,54 @@ function MemberRow({ member }: { member: Member }) {
           )}
           <button onClick={() => setEditing(e => !e)}
             className="text-xs px-2 py-0.5 rounded-full"
-            style={{ background: 'var(--color-bg)', color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
+            style={{ background: editing ? 'var(--color-red)' : 'var(--color-bg)', color: editing ? '#fff' : 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
             ✏️
           </button>
         </div>
       </div>
 
-      {/* Editable search fields */}
+      {/* Editable fields */}
       {editing && (
         <div className="space-y-2 pt-1">
-          <div className="flex gap-2">
-            <input
-              value={searchName}
-              onChange={e => setSearchName(e.target.value)}
-              placeholder="Search name for Google Places"
-              style={inp}
-            />
+          <div>
+            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>Search name (for Google Places)</p>
+            <input value={searchName} onChange={e => setSearchName(e.target.value)}
+              placeholder="Business name to search" style={inp} />
           </div>
-          <div className="flex gap-2">
-            <input
-              value={searchCity}
-              onChange={e => setSearchCity(e.target.value)}
-              placeholder="City"
-              style={{ ...inp, maxWidth: 120 }}
-            />
+          <div>
+            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>City</p>
+            <input value={searchCity} onChange={e => setSearchCity(e.target.value)}
+              placeholder="City" style={inp} />
           </div>
+          <div>
+            <p className="text-xs mb-1" style={{ color: 'var(--color-muted)' }}>Photo URL (paste to override)</p>
+            <input value={photoUrl} onChange={e => setPhotoUrl(e.target.value)}
+              placeholder="https://..." style={inp} />
+          </div>
+          {photoUrl && (
+            <img src={photoUrl} alt="preview" className="rounded-lg"
+              style={{ width: 80, height: 80, objectFit: 'contain', background: 'var(--color-bg)', border: '1px solid var(--color-border)' }} />
+          )}
           <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            Edit the name/city above to improve Google Places matching, then click Refresh.
+            Edit name/city to improve Google matching, or paste a photo URL directly.
           </p>
         </div>
       )}
 
+      {/* Action buttons */}
       <div className="flex gap-2 flex-wrap">
         <button onClick={handleRefresh} disabled={refreshing}
           className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40"
           style={{ background: 'rgba(66,133,244,0.15)', color: '#4285f4', border: '1px solid rgba(66,133,244,0.3)' }}>
           {refreshing ? '⏳' : '🔄'} Refresh from Google
         </button>
+        {photoChanged && (
+          <button onClick={handleSavePhoto}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(124,58,237,0.15)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.3)' }}>
+            💾 Save Photo
+          </button>
+        )}
         {isPending && (
           <button onClick={handleApprove}
             className="px-3 py-1.5 rounded-lg text-xs font-medium"
@@ -249,15 +270,15 @@ function MemberRow({ member }: { member: Member }) {
 }
 
 export default function MembersEnrichmentAdmin() {
-  const [running, setRunning]     = useState(false)
-  const [done, setDone]           = useState(false)
-  const [log, setLog]             = useState<LogEntry[]>([])
-  const [progress, setProgress]   = useState({ current: 0, total: 0 })
-  const [stats, setStats]         = useState({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
-  const [rerun, setRerun]         = useState(false)
-  const [threshold, setThreshold] = useState(0.5)
-  const [members, setMembers]     = useState<Member[]>([])
-  const [view, setView]           = useState<'bulk' | 'records'>('bulk')
+  const [running, setRunning]           = useState(false)
+  const [done, setDone]                 = useState(false)
+  const [log, setLog]                   = useState<LogEntry[]>([])
+  const [progress, setProgress]         = useState({ current: 0, total: 0 })
+  const [stats, setStats]               = useState({ found: 0, not_found: 0, error: 0, skipped: 0, rejected: 0 })
+  const [rerun, setRerun]               = useState(false)
+  const [threshold, setThreshold]       = useState(0.5)
+  const [members, setMembers]           = useState<Member[]>([])
+  const [view, setView]                 = useState<'bulk' | 'records'>('bulk')
   const [memberSearch, setMemberSearch] = useState('')
 
   useEffect(() => {
@@ -471,22 +492,14 @@ export default function MembersEnrichmentAdmin() {
               <div className="space-y-2">{pending.map(m => <MemberRow key={m.id} member={m} />)}</div>
             </div>
           )}
-
           <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="font-semibold text-sm" style={{ color: 'var(--color-muted)' }}>
-                All Members ({rest.length})
-              </h3>
-            </div>
-            {/* Search within records */}
-            <input
-              type="text"
-              placeholder="Search members..."
-              value={memberSearch}
+            <h3 className="font-semibold text-sm mb-2" style={{ color: 'var(--color-muted)' }}>
+              All Members ({rest.length})
+            </h3>
+            <input type="text" placeholder="Search members..." value={memberSearch}
               onChange={e => setMemberSearch(e.target.value)}
               className="w-full px-3 py-2 rounded-lg text-sm outline-none mb-3"
-              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontSize: 16 }}
-            />
+              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontSize: 16 }} />
             <div className="space-y-2">
               {filteredRest.map(m => <MemberRow key={m.id} member={m} />)}
             </div>
