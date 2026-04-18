@@ -1,34 +1,47 @@
 import { useState, useRef, useEffect } from 'react'
-import MembersModule from './modules/members/MembersModule'
-import VideosModule  from './modules/videos/VideosModule'
-import BoardModule   from './modules/board/BoardModule'
-import ChatModule    from './modules/chat/ChatModule'
-import GivingModule  from './modules/giving/GivingModule'
-import DineModule    from './modules/din/DineModule'
-import EventsModule  from './modules/events/EventsModule'
-import ChatWindow    from './modules/chat/components/ChatWindow'
+import MembersModule       from './modules/members/MembersModule'
+import VideosModule        from './modules/videos/VideosModule'
+import BoardModule         from './modules/board/BoardModule'
+import ChatModule          from './modules/chat/ChatModule'
+import GivingModule        from './modules/giving/GivingModule'
+import DineModule          from './modules/din/DineModule'
+import EventsModule        from './modules/events/EventsModule'
+import OpportunitiesModule from './modules/opportunities/OpportunitiesModule'
+import ChatWindow          from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events'
+type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events' | 'opportunities'
 
 const TAB_META: Record<Tab, { icon: string; label: string }> = {
-  videos:  { icon: '🎬', label: 'Videos'  },
-  dine:    { icon: '🍜', label: 'Dine'    },
-  giving:  { icon: '🤝', label: 'Giving'  },
-  members: { icon: '👥', label: 'Members' },
-  board:   { icon: '📋', label: 'Board'   },
-  chat:    { icon: '🤖', label: 'Chat'    },
-  events:  { icon: '📅', label: 'Events'  },
+  videos:        { icon: '🎬', label: 'Videos'        },
+  dine:          { icon: '🍜', label: 'Dine'          },
+  giving:        { icon: '🤝', label: 'Giving'        },
+  members:       { icon: '👥', label: 'Members'       },
+  board:         { icon: '📋', label: 'Board'         },
+  chat:          { icon: '🤖', label: 'Chat'          },
+  events:        { icon: '📅', label: 'Events'        },
+  opportunities: { icon: '📌', label: 'Opportunities' },
 }
 
-const MORE_TABS: Tab[] = ['members', 'board', 'events', 'chat']
+const MORE_TABS: Tab[] = ['members', 'board', 'events', 'opportunities', 'chat']
 
-// Parse deep link from current URL path
+const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events', 'opportunities'])
+
 function parseDeepLink(): { tab: Tab; id?: string } {
-  const path = window.location.pathname
-  const match = path.match(/^\/(dine|events|board)\/(.+)$/)
-  if (match) return { tab: match[1] as Tab, id: match[2] }
-  const tabMatch = path.match(/^\/(videos|dine|giving|members|board|chat|events)$/)
-  if (tabMatch) return { tab: tabMatch[1] as Tab }
+  try {
+    const path = window.location.pathname ?? '/'
+    const match = path.match(/^\/(dine|events|board)\/(.+)$/)
+    if (match?.[1] && match?.[2]) {
+      const t = match[1] as Tab
+      if (VALID_TABS.has(t)) return { tab: t, id: match[2] }
+    }
+    const tabMatch = path.match(/^\/([a-z]+)$/)
+    if (tabMatch?.[1]) {
+      const t = tabMatch[1] as Tab
+      if (VALID_TABS.has(t)) return { tab: t }
+    }
+  } catch {
+    // ignore
+  }
   return { tab: 'videos' }
 }
 
@@ -40,7 +53,6 @@ export default function App() {
   const [moreOpen, setMoreOpen]     = useState(false)
   const moreRef                     = useRef<HTMLDivElement>(null)
 
-  // Close popup when clicking outside
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
@@ -88,13 +100,14 @@ export default function App() {
 
       {/* Active Module */}
       <main>
-        {tab === 'videos'  && <VideosModule  />}
-        {tab === 'dine'    && <DineModule    deepLinkId={deepLinkId} />}
-        {tab === 'giving'  && <GivingModule  />}
-        {tab === 'members' && <MembersModule />}
-        {tab === 'board'   && <BoardModule   />}
-        {tab === 'chat'    && <ChatModule    />}
-        {tab === 'events'  && <EventsModule  />}
+        {tab === 'videos'        && <VideosModule  />}
+        {tab === 'dine'          && <DineModule    deepLinkId={deepLinkId} />}
+        {tab === 'giving'        && <GivingModule  />}
+        {tab === 'members'       && <MembersModule />}
+        {tab === 'board'         && <BoardModule   />}
+        {tab === 'chat'          && <ChatModule    />}
+        {tab === 'events'        && <EventsModule  />}
+        {tab === 'opportunities' && <OpportunitiesModule />}
       </main>
 
       {/* Floating chat bubble */}
@@ -122,7 +135,6 @@ export default function App() {
         background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderColor: 'var(--color-border)', height: 64, zIndex: 50,
       }}>
-        {/* Primary tabs */}
         {(['videos', 'dine', 'giving'] as Tab[]).map(t => (
           <button key={t}
             onClick={() => navigate(t)}
@@ -133,14 +145,13 @@ export default function App() {
           </button>
         ))}
 
-        {/* More button with popup */}
         <div ref={moreRef} className="flex-1 relative flex flex-col items-center justify-center">
           {moreOpen && (
             <div className="absolute bottom-full mb-2 right-0 rounded-2xl overflow-hidden shadow-2xl"
               style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
-                minWidth: 160,
+                minWidth: 180,
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
               }}>
               {MORE_TABS.map((t, i) => (
