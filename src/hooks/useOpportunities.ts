@@ -49,7 +49,19 @@ export function isClosed(opp: Opportunity): boolean {
   if (!opp.close_date) return false
   const closeDate = new Date(cleanDateStr(opp.close_date))
   if (isNaN(closeDate.getTime())) return false
-  return closeDate < new Date()
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const close = new Date(closeDate)
+  close.setHours(0, 0, 0, 0)
+  return close < now
+}
+
+export function isDueToday(opp: Opportunity): boolean {
+  if (!opp.close_date) return false
+  const closeDate = new Date(cleanDateStr(opp.close_date))
+  if (isNaN(closeDate.getTime())) return false
+  const now = new Date()
+  return closeDate.toDateString() === now.toDateString()
 }
 
 export function isUrgent(opp: Opportunity): boolean {
@@ -58,7 +70,7 @@ export function isUrgent(opp: Opportunity): boolean {
   if (isNaN(closeDate.getTime())) return false
   const now = new Date()
   const daysLeft = Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
-  return daysLeft >= 0 && daysLeft <= 7
+  return daysLeft > 0 && daysLeft <= 7
 }
 
 export function daysUntilClose(opp: Opportunity): number | null {
@@ -76,26 +88,28 @@ export function formatDate(dateStr: string): string {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+export function getStatus(opp: Opportunity): 'closed' | 'due_today' | 'urgent' | 'inactive' | 'open' {
+  if (isClosed(opp)) return 'closed'
+  if (isDueToday(opp)) return 'due_today'
+  if (isUrgent(opp)) return 'urgent'
+  if (!opp.active) return 'inactive'
+  return 'open'
+}
+
 export function useOpportunities() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [loading, setLoading]             = useState(true)
 
   useEffect(() => {
-    // Fetch ALL records — no active filter
     const q = query(collection(db, 'milwaukee_bids'))
     const unsub = onSnapshot(q, snap => {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as Opportunity))
         .sort((a, b) => {
-          // Closed goes to bottom
-          const aClosed = isClosed(a) ? 1 : 0
-          const bClosed = isClosed(b) ? 1 : 0
-          if (aClosed !== bClosed) return aClosed - bClosed
-          // Urgent first among open
-          const aUrgent = isUrgent(a) ? 0 : 1
-          const bUrgent = isUrgent(b) ? 0 : 1
-          if (aUrgent !== bUrgent) return aUrgent - bUrgent
-          // Then by close date
+          const order = { closed: 4, inactive: 3, open: 2, urgent: 1, due_today: 0 }
+          const aScore = order[getStatus(a)]
+          const bScore = order[getStatus(b)]
+          if (aScore !== bScore) return aScore - bScore
           if (a.close_date && b.close_date) {
             return new Date(cleanDateStr(a.close_date)).getTime() - new Date(cleanDateStr(b.close_date)).getTime()
           }
