@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, query, where, onSnapshot } from 'firebase/firestore'
+import { collection, query, onSnapshot } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 
 export interface Opportunity {
@@ -21,18 +21,21 @@ export interface Opportunity {
   active: boolean
 }
 
-// WCCC member business category mapping
 export const WCCC_CATEGORIES: Record<string, string[]> = {
-  'Construction':          ['Construction', 'Building', 'Infrastructure', 'Facilities'],
-  'Food & Beverage':       ['Food', 'Catering', 'Restaurant', 'Beverage'],
-  'IT & Technology':       ['IT', 'Technology', 'Software', 'Digital', 'Cyber'],
-  'Professional Services': ['Consulting', 'Legal', 'Accounting', 'Finance', 'Management'],
-  'Healthcare':            ['Health', 'Medical', 'Dental', 'Mental Health'],
-  'Retail & Wholesale':    ['Retail', 'Wholesale', 'Supply', 'Goods'],
-  'Transportation':        ['Transportation', 'Logistics', 'Fleet', 'Transit'],
-  'Real Estate':           ['Real Estate', 'Property', 'Facility'],
-  'Marketing & Media':     ['Marketing', 'Media', 'Advertising', 'Design', 'Print'],
-  'Education & Training':  ['Education', 'Training', 'Workforce', 'Youth'],
+  'Construction':          ['Construction', 'Building', 'Infrastructure', 'Facilities', 'Renovation', 'Roofing', 'Plumbing', 'Electrical'],
+  'Food & Beverage':       ['Food', 'Catering', 'Restaurant', 'Beverage', 'Dining', 'Kitchen'],
+  'IT & Technology':       ['IT', 'Technology', 'Software', 'Digital', 'Cyber', 'Network', 'Computer', 'Data'],
+  'Professional Services': ['Consulting', 'Legal', 'Accounting', 'Finance', 'Management', 'Audit', 'Advisory'],
+  'Healthcare':            ['Health', 'Medical', 'Dental', 'Mental Health', 'Nursing', 'Clinical'],
+  'Retail & Wholesale':    ['Retail', 'Wholesale', 'Supply', 'Goods', 'Product', 'Equipment'],
+  'Transportation':        ['Transportation', 'Logistics', 'Fleet', 'Transit', 'Delivery', 'Vehicle'],
+  'Real Estate':           ['Real Estate', 'Property', 'Facility', 'Leasing', 'Space'],
+  'Marketing & Media':     ['Marketing', 'Media', 'Advertising', 'Design', 'Print', 'Communications'],
+  'Education & Training':  ['Education', 'Training', 'Workforce', 'Youth', 'Learning'],
+}
+
+export function cleanDateStr(dateStr: string): string {
+  return dateStr.replace(/\s[A-Z]{2,4}$/, '').trim()
 }
 
 export function matchWCCCCategories(opp: Opportunity): string[] {
@@ -42,9 +45,17 @@ export function matchWCCCCategories(opp: Opportunity): string[] {
     .map(([cat]) => cat)
 }
 
+export function isClosed(opp: Opportunity): boolean {
+  if (!opp.close_date) return false
+  const closeDate = new Date(cleanDateStr(opp.close_date))
+  if (isNaN(closeDate.getTime())) return false
+  return closeDate < new Date()
+}
+
 export function isUrgent(opp: Opportunity): boolean {
   if (!opp.close_date) return false
-  const closeDate = new Date(opp.close_date)
+  const closeDate = new Date(cleanDateStr(opp.close_date))
+  if (isNaN(closeDate.getTime())) return false
   const now = new Date()
   const daysLeft = Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
   return daysLeft >= 0 && daysLeft <= 7
@@ -52,9 +63,17 @@ export function isUrgent(opp: Opportunity): boolean {
 
 export function daysUntilClose(opp: Opportunity): number | null {
   if (!opp.close_date) return null
-  const closeDate = new Date(opp.close_date)
+  const closeDate = new Date(cleanDateStr(opp.close_date))
+  if (isNaN(closeDate.getTime())) return null
   const now = new Date()
   return Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+}
+
+export function formatDate(dateStr: string): string {
+  if (!dateStr) return 'TBD'
+  const date = new Date(cleanDateStr(dateStr))
+  if (isNaN(date.getTime())) return dateStr
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export function useOpportunities() {
@@ -62,19 +81,24 @@ export function useOpportunities() {
   const [loading, setLoading]             = useState(true)
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'milwaukee_bids'),
-      where('active', '==', true)
-    )
+    // Fetch ALL records — no active filter
+    const q = query(collection(db, 'milwaukee_bids'))
     const unsub = onSnapshot(q, snap => {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as Opportunity))
         .sort((a, b) => {
-          // Urgent first, then by close date
+          // Closed goes to bottom
+          const aClosed = isClosed(a) ? 1 : 0
+          const bClosed = isClosed(b) ? 1 : 0
+          if (aClosed !== bClosed) return aClosed - bClosed
+          // Urgent first among open
           const aUrgent = isUrgent(a) ? 0 : 1
           const bUrgent = isUrgent(b) ? 0 : 1
           if (aUrgent !== bUrgent) return aUrgent - bUrgent
-          if (a.close_date && b.close_date) return new Date(a.close_date).getTime() - new Date(b.close_date).getTime()
+          // Then by close date
+          if (a.close_date && b.close_date) {
+            return new Date(cleanDateStr(a.close_date)).getTime() - new Date(cleanDateStr(b.close_date)).getTime()
+          }
           return 0
         })
       setOpportunities(all)
