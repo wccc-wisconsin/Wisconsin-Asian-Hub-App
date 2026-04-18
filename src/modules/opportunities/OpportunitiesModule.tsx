@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { useOpportunities, matchWCCCCategories, isUrgent, daysUntilClose, WCCC_CATEGORIES, type Opportunity } from '../../hooks/useOpportunities'
+import { useOpportunities, matchWCCCCategories, isUrgent, daysUntilClose, type Opportunity } from '../../hooks/useOpportunities'
 
 const CATEGORY_ICONS: Record<string, string> = {
   'Construction':          '🏗️',
