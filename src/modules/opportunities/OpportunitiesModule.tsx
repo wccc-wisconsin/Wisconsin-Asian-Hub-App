@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import {
   useOpportunities, matchWCCCCategories,
   isUrgent, isClosed, isDueToday, daysUntilClose,
-  formatDate, cleanDateStr, getStatus,
+  formatDate, getStatus,
   type Opportunity
 } from '../../hooks/useOpportunities'
 
