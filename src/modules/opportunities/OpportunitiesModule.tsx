@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
 import {
   useOpportunities, matchWCCCCategories,
-  isUrgent, isClosed, daysUntilClose, formatDate, cleanDateStr,
+  isUrgent, isClosed, isDueToday, daysUntilClose,
+  formatDate, cleanDateStr, getStatus,
   type Opportunity
 } from '../../hooks/useOpportunities'
 
@@ -20,27 +21,27 @@ const CATEGORY_ICONS: Record<string, string> = {
 
 function OpportunityCard({ opp }: { opp: Opportunity }) {
   const [expanded, setExpanded] = useState(false)
-  const urgent      = isUrgent(opp)
-  const closed      = isClosed(opp)
-  const inactive    = !opp.active && !closed
+  const status      = getStatus(opp)
+  const closed      = status === 'closed'
+  const dueToday    = status === 'due_today'
+  const urgent      = status === 'urgent'
+  const inactive    = status === 'inactive'
   const days        = daysUntilClose(opp)
   const wcccMatches = matchWCCCCategories(opp)
 
-  const borderColor = closed
-    ? 'rgba(156,163,175,0.3)'
-    : inactive
-    ? 'rgba(251,191,36,0.25)'
-    : urgent
-    ? 'rgba(239,68,68,0.4)'
-    : 'var(--color-border)'
+  const borderColor =
+    closed    ? 'rgba(156,163,175,0.3)'  :
+    dueToday  ? 'rgba(239,68,68,0.6)'   :
+    urgent    ? 'rgba(239,68,68,0.4)'   :
+    inactive  ? 'rgba(251,191,36,0.25)' :
+    'var(--color-border)'
 
-  const accentColor = closed
-    ? 'linear-gradient(90deg, #6b7280, #9ca3af)'
-    : inactive
-    ? 'linear-gradient(90deg, #d97706, #fbbf24)'
-    : urgent
-    ? 'linear-gradient(90deg, #ef4444, #f97316)'
-    : 'linear-gradient(90deg, #B91C1C, #ef4444)'
+  const accentColor =
+    closed    ? 'linear-gradient(90deg, #6b7280, #9ca3af)'  :
+    dueToday  ? 'linear-gradient(90deg, #dc2626, #ef4444)'  :
+    urgent    ? 'linear-gradient(90deg, #ef4444, #f97316)'  :
+    inactive  ? 'linear-gradient(90deg, #d97706, #fbbf24)'  :
+    'linear-gradient(90deg, #B91C1C, #ef4444)'
 
   return (
     <article className="rounded-xl overflow-hidden" style={{
@@ -59,16 +60,22 @@ function OpportunityCard({ opp }: { opp: Opportunity }) {
               🔒 Closed
             </span>
           )}
+          {dueToday && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+              style={{ background: 'rgba(220,38,38,0.2)', color: '#dc2626' }}>
+              ⚠️ Due Today
+            </span>
+          )}
+          {urgent && (
+            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
+              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
+              🔥 Closing in {days}d
+            </span>
+          )}
           {inactive && (
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: 'rgba(251,191,36,0.15)', color: '#d97706' }}>
               ⏸ Inactive
-            </span>
-          )}
-          {urgent && !closed && !inactive && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>
-              🔥 Closing {days === 0 ? 'Today' : `in ${days}d`}
             </span>
           )}
           {opp.categories?.filter(Boolean).map(cat => (
@@ -106,7 +113,7 @@ function OpportunityCard({ opp }: { opp: Opportunity }) {
               <div>
                 <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Closes</p>
                 <p className="text-xs font-medium" style={{
-                  color: closed ? '#6b7280' : urgent ? '#ef4444' : 'var(--color-text)'
+                  color: closed ? '#6b7280' : dueToday ? '#dc2626' : urgent ? '#ef4444' : 'var(--color-text)'
                 }}>
                   {formatDate(opp.close_date)}
                 </p>
@@ -163,11 +170,11 @@ function OpportunityCard({ opp }: { opp: Opportunity }) {
         <a href={opp.url} target="_blank" rel="noopener noreferrer"
           className="block w-full py-2 rounded-lg text-xs font-semibold text-center"
           style={{
-            background: closed || inactive ? 'var(--color-bg)' : urgent ? 'var(--color-red)' : 'rgba(185,28,28,0.1)',
-            color: closed || inactive ? 'var(--color-muted)' : urgent ? '#fff' : 'var(--color-red)',
-            border: `1px solid ${closed || inactive ? 'var(--color-border)' : urgent ? 'transparent' : 'rgba(185,28,28,0.2)'}`,
+            background: closed || inactive ? 'var(--color-bg)' : dueToday ? '#dc2626' : urgent ? 'var(--color-red)' : 'rgba(185,28,28,0.1)',
+            color: closed || inactive ? 'var(--color-muted)' : dueToday || urgent ? '#fff' : 'var(--color-red)',
+            border: `1px solid ${closed || inactive ? 'var(--color-border)' : dueToday || urgent ? 'transparent' : 'rgba(185,28,28,0.2)'}`,
           }}>
-          {closed ? 'View Closed Bid' : inactive ? 'View Bid' : 'View Bid Details →'}
+          {closed ? 'View Closed Bid' : inactive ? 'View Bid' : dueToday ? '⚠️ Submit Now — Due Today' : 'View Bid Details →'}
         </a>
       </div>
     </article>
@@ -181,41 +188,22 @@ export default function OpportunitiesModule() {
   const [showUrgentOnly, setShowUrgentOnly] = useState(false)
   const [search, setSearch]                 = useState('')
 
-  const urgentCount   = useMemo(() => opportunities.filter(o => isUrgent(o) && !isClosed(o) && o.active).length, [opportunities])
-  const closedCount   = useMemo(() => opportunities.filter(isClosed).length, [opportunities])
+  const dueTodayCount = useMemo(() => opportunities.filter(o => isDueToday(o)).length, [opportunities])
+  const urgentCount   = useMemo(() => opportunities.filter(o => isUrgent(o)).length, [opportunities])
+  const closedCount   = useMemo(() => opportunities.filter(o => isClosed(o)).length, [opportunities])
   const inactiveCount = useMemo(() => opportunities.filter(o => !o.active && !isClosed(o)).length, [opportunities])
-
-  // Sorting: urgent open → regular open → inactive → closed
-  const sorted = useMemo(() => [...opportunities].sort((a, b) => {
-    const aClosed   = isClosed(a) ? 3 : 0
-    const bClosed   = isClosed(b) ? 3 : 0
-    const aInactive = !a.active && !isClosed(a) ? 2 : 0
-    const bInactive = !b.active && !isClosed(b) ? 2 : 0
-    const aUrgent   = isUrgent(a) && a.active ? 0 : 1
-    const bUrgent   = isUrgent(b) && b.active ? 0 : 1
-    const aScore    = aClosed || aInactive || aUrgent
-    const bScore    = bClosed || bInactive || bUrgent
-    if (aScore !== bScore) return aScore - bScore
-    if (a.close_date && b.close_date) {
-      return new Date(cleanDateStr(a.close_date)).getTime() - new Date(cleanDateStr(b.close_date)).getTime()
-    }
-    return 0
-  }), [opportunities])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return sorted.filter(o => {
-      // By default hide closed and inactive
-      if (!showClosed && isClosed(o)) return false
-      if (!showClosed && !o.active) return false
-      if (showUrgentOnly && !isUrgent(o)) return false
-      if (categoryFilter) {
-        if (!matchWCCCCategories(o).includes(categoryFilter)) return false
-      }
+    return opportunities.filter(o => {
+      const status = getStatus(o)
+      if (!showClosed && (status === 'closed' || status === 'inactive')) return false
+      if (showUrgentOnly && status !== 'urgent' && status !== 'due_today') return false
+      if (categoryFilter && !matchWCCCCategories(o).includes(categoryFilter)) return false
       if (q && !`${o.title} ${o.summary} ${o.department} ${(o.categories ?? []).join(' ')}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [sorted, showClosed, showUrgentOnly, categoryFilter, search])
+  }, [opportunities, showClosed, showUrgentOnly, categoryFilter, search])
 
   const allWCCCCategories = useMemo(() => {
     const cats = new Set<string>()
@@ -230,8 +218,9 @@ export default function OpportunitiesModule() {
         <h1 className="font-display text-xl font-bold mb-1" style={{ color: 'var(--color-text)' }}>
           Opportunities
         </h1>
-        <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
+        <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
           Milwaukee County bids & RFPs · <span style={{ color: 'var(--color-gold)' }}>{opportunities.length}</span> total
+          {dueTodayCount > 0 && <span style={{ color: '#dc2626' }}> · ⚠️ {dueTodayCount} due today</span>}
           {urgentCount > 0 && <span style={{ color: '#ef4444' }}> · 🔥 {urgentCount} urgent</span>}
           {inactiveCount > 0 && <span style={{ color: '#d97706' }}> · ⏸ {inactiveCount} inactive</span>}
           {closedCount > 0 && <span style={{ color: '#6b7280' }}> · 🔒 {closedCount} closed</span>}
@@ -243,7 +232,6 @@ export default function OpportunitiesModule() {
         background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-border)',
       }}>
-        {/* Search */}
         <input
           type="text"
           placeholder="Search opportunities..."
@@ -258,32 +246,28 @@ export default function OpportunitiesModule() {
           }}
         />
 
-        {/* Filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setShowUrgentOnly(u => !u)}
+          <button onClick={() => setShowUrgentOnly(u => !u)}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
               background: showUrgentOnly ? '#ef4444' : 'var(--color-surface)',
               color: showUrgentOnly ? '#fff' : 'var(--color-muted)',
               border: `1px solid ${showUrgentOnly ? '#ef4444' : 'var(--color-border)'}`,
             }}>
-            🔥 Urgent
+            🔥 Urgent & Due
           </button>
 
-          <button
-            onClick={() => setShowClosed(c => !c)}
+          <button onClick={() => setShowClosed(c => !c)}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
               background: showClosed ? '#6b7280' : 'var(--color-surface)',
               color: showClosed ? '#fff' : 'var(--color-muted)',
               border: `1px solid ${showClosed ? '#6b7280' : 'var(--color-border)'}`,
             }}>
-            🔒 Show Closed & Inactive
+            🔒 Show Closed
           </button>
 
-          <button
-            onClick={() => setCategoryFilter('')}
+          <button onClick={() => setCategoryFilter('')}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
               background: !categoryFilter ? 'rgba(185,28,28,0.15)' : 'var(--color-surface)',
