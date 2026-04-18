@@ -35,7 +35,10 @@ export const WCCC_CATEGORIES: Record<string, string[]> = {
 }
 
 export function cleanDateStr(dateStr: string): string {
-  return dateStr.replace(/\s[A-Z]{2,4}$/, '').trim()
+  return dateStr
+    .replace(/(\d+)(st|nd|rd|th)/g, '$1') // 10th → 10, 1st → 1, 2nd → 2, 3rd → 3
+    .replace(/\s[A-Z]{2,4}$/, '')          // remove timezone: CDT, CST, EST, PDT
+    .trim()
 }
 
 export function matchWCCCCategories(opp: Opportunity): string[] {
@@ -106,7 +109,7 @@ export function useOpportunities() {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as Opportunity))
         .sort((a, b) => {
-          const order = { closed: 4, inactive: 3, open: 2, urgent: 1, due_today: 0 }
+          const order = { due_today: 0, urgent: 1, open: 2, inactive: 3, closed: 4 }
           const aScore = order[getStatus(a)]
           const bScore = order[getStatus(b)]
           if (aScore !== bScore) return aScore - bScore
