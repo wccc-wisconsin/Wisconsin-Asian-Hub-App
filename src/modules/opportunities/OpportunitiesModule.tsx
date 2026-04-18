@@ -1,5 +1,9 @@
 import { useState, useMemo } from 'react'
-import { useOpportunities, matchWCCCCategories, isUrgent, isClosed, daysUntilClose, formatDate, type Opportunity } from '../../hooks/useOpportunities'
+import {
+  useOpportunities, matchWCCCCategories,
+  isUrgent, isClosed, daysUntilClose, formatDate, cleanDateStr,
+  type Opportunity
+} from '../../hooks/useOpportunities'
 
 const CATEGORY_ICONS: Record<string, string> = {
   'Construction':          '🏗️',
@@ -170,119 +174,48 @@ function OpportunityCard({ opp }: { opp: Opportunity }) {
   )
 }
 
-function WeChatDigest({ opportunities }: { opportunities: Opportunity[] }) {
-  const [generating, setGenerating] = useState(false)
-  const [digest, setDigest]         = useState('')
-  const [copied, setCopied]         = useState(false)
-
-  async function generateDigest() {
-    setGenerating(true)
-    setDigest('')
-    try {
-      const openOpps = opportunities.filter(o => !isClosed(o) && o.active)
-      const urgent   = openOpps.filter(isUrgent)
-      const regular  = openOpps.filter(o => !isUrgent(o)).slice(0, 5)
-      const featured = [...urgent, ...regular].slice(0, 8)
-
-      const summary = featured.map(o => {
-        const matches = matchWCCCCategories(o)
-        const days    = daysUntilClose(o)
-        return `- ${o.title}${o.department ? ` (${o.department})` : ''}${days !== null ? `, closes in ${days} days` : o.close_date ? `, closes ${formatDate(o.close_date)}` : ''}${matches.length ? `, relevant to: ${matches.join(', ')}` : ''}`
-      }).join('\n')
-
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [{
-            role: 'user',
-            content: `Create a bilingual (English + Chinese) WeChat digest for Wisconsin Chinese Chamber of Commerce (WCCC) members about these Milwaukee County bid opportunities. Format it nicely for WeChat with emojis. Keep it concise and actionable. Highlight urgent ones closing soon.
-
-Opportunities:
-${summary}
-
-Format:
-1. Brief English intro (2-3 sentences)
-2. List of opportunities with key details in English
-3. Chinese translation of the full message
-4. Call to action to visit hub.wcccbusinessnetwork.org for more details
-
-Return only the digest text, ready to copy into WeChat.`
-          }]
-        }),
-      })
-      const data = await res.json()
-      setDigest(data.reply ?? 'Failed to generate digest.')
-    } catch {
-      setDigest('Failed to generate digest. Please try again.')
-    }
-    setGenerating(false)
-  }
-
-  function handleCopy() {
-    navigator.clipboard.writeText(digest)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div className="rounded-xl overflow-hidden"
-      style={{ background: 'var(--color-surface)', border: '1px solid rgba(251,191,36,0.3)' }}>
-      <div className="px-4 py-3 border-b" style={{ borderColor: 'rgba(251,191,36,0.2)', background: 'rgba(251,191,36,0.05)' }}>
-        <p className="text-sm font-semibold" style={{ color: 'var(--color-gold)' }}>💬 WeChat Digest Generator</p>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>AI generates a bilingual weekly summary ready to share</p>
-      </div>
-      <div className="p-4 space-y-3">
-        <button onClick={generateDigest} disabled={generating}
-          className="w-full py-2.5 rounded-xl text-sm font-semibold disabled:opacity-40 flex items-center justify-center gap-2"
-          style={{ background: 'var(--color-gold)', color: '#000' }}>
-          {generating ? '⏳ Generating...' : '🤖 Generate WeChat Digest'}
-        </button>
-        {digest && (
-          <>
-            <div className="rounded-xl p-3 text-xs leading-relaxed"
-              style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', whiteSpace: 'pre-wrap', maxHeight: 300, overflowY: 'auto' }}>
-              {digest}
-            </div>
-            <button onClick={handleCopy}
-              className="w-full py-2.5 rounded-xl text-sm font-semibold"
-              style={{ background: copied ? '#22c55e' : 'var(--color-surface)', color: copied ? '#fff' : 'var(--color-text)', border: '1px solid var(--color-border)' }}>
-              {copied ? '✅ Copied!' : '📋 Copy to Clipboard'}
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  )
-}
-
 export default function OpportunitiesModule() {
   const { opportunities, loading }          = useOpportunities()
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [showClosed, setShowClosed]         = useState(false)
   const [showUrgentOnly, setShowUrgentOnly] = useState(false)
-  const [showClosedOnly, setShowClosedOnly] = useState(false)
-  const [showDigest, setShowDigest]         = useState(false)
   const [search, setSearch]                 = useState('')
 
-  const urgentCount   = opportunities.filter(o => isUrgent(o) && !isClosed(o) && o.active).length
-  const closedCount   = opportunities.filter(isClosed).length
-  const inactiveCount = opportunities.filter(o => !o.active && !isClosed(o)).length
+  const urgentCount   = useMemo(() => opportunities.filter(o => isUrgent(o) && !isClosed(o) && o.active).length, [opportunities])
+  const closedCount   = useMemo(() => opportunities.filter(isClosed).length, [opportunities])
+  const inactiveCount = useMemo(() => opportunities.filter(o => !o.active && !isClosed(o)).length, [opportunities])
+
+  // Sorting: urgent open → regular open → inactive → closed
+  const sorted = useMemo(() => [...opportunities].sort((a, b) => {
+    const aClosed   = isClosed(a) ? 3 : 0
+    const bClosed   = isClosed(b) ? 3 : 0
+    const aInactive = !a.active && !isClosed(a) ? 2 : 0
+    const bInactive = !b.active && !isClosed(b) ? 2 : 0
+    const aUrgent   = isUrgent(a) && a.active ? 0 : 1
+    const bUrgent   = isUrgent(b) && b.active ? 0 : 1
+    const aScore    = aClosed || aInactive || aUrgent
+    const bScore    = bClosed || bInactive || bUrgent
+    if (aScore !== bScore) return aScore - bScore
+    if (a.close_date && b.close_date) {
+      return new Date(cleanDateStr(a.close_date)).getTime() - new Date(cleanDateStr(b.close_date)).getTime()
+    }
+    return 0
+  }), [opportunities])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
-    return opportunities.filter(o => {
+    return sorted.filter(o => {
+      // By default hide closed and inactive
+      if (!showClosed && isClosed(o)) return false
+      if (!showClosed && !o.active) return false
       if (showUrgentOnly && !isUrgent(o)) return false
-      if (showClosedOnly && !isClosed(o)) return false
-      // By default hide closed and inactive unless explicitly requested
-      if (!showClosedOnly && !showUrgentOnly && (isClosed(o) || !o.active)) return false
       if (categoryFilter) {
-        const matches = matchWCCCCategories(o)
-        if (!matches.includes(categoryFilter)) return false
+        if (!matchWCCCCategories(o).includes(categoryFilter)) return false
       }
-      if (q && !`${o.title} ${o.summary} ${o.department} ${o.categories?.join(' ')}`.toLowerCase().includes(q)) return false
+      if (q && !`${o.title} ${o.summary} ${o.department} ${(o.categories ?? []).join(' ')}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [opportunities, showUrgentOnly, showClosedOnly, categoryFilter, search])
+  }, [sorted, showClosed, showUrgentOnly, categoryFilter, search])
 
   const allWCCCCategories = useMemo(() => {
     const cats = new Set<string>()
@@ -294,20 +227,9 @@ export default function OpportunitiesModule() {
     <div className="max-w-6xl mx-auto pb-24">
       {/* Header */}
       <div className="px-4 pt-5 pb-3">
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="font-display text-xl font-bold" style={{ color: 'var(--color-text)' }}>
-            Opportunities
-          </h1>
-          <button onClick={() => setShowDigest(d => !d)}
-            className="text-xs px-3 py-1.5 rounded-full font-medium"
-            style={{
-              background: showDigest ? 'var(--color-gold)' : 'rgba(251,191,36,0.1)',
-              color: showDigest ? '#000' : 'var(--color-gold)',
-              border: '1px solid rgba(251,191,36,0.3)',
-            }}>
-            💬 WeChat Digest
-          </button>
-        </div>
+        <h1 className="font-display text-xl font-bold mb-1" style={{ color: 'var(--color-text)' }}>
+          Opportunities
+        </h1>
         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
           Milwaukee County bids & RFPs · <span style={{ color: 'var(--color-gold)' }}>{opportunities.length}</span> total
           {urgentCount > 0 && <span style={{ color: '#ef4444' }}> · 🔥 {urgentCount} urgent</span>}
@@ -316,18 +238,12 @@ export default function OpportunitiesModule() {
         </p>
       </div>
 
-      {/* WeChat Digest */}
-      {showDigest && (
-        <div className="px-4 mb-4">
-          <WeChatDigest opportunities={opportunities} />
-        </div>
-      )}
-
       {/* Filters */}
       <div className="sticky top-14 z-40 px-4 py-3" style={{
         background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-border)',
       }}>
+        {/* Search */}
         <input
           type="text"
           placeholder="Search opportunities..."
@@ -342,8 +258,10 @@ export default function OpportunitiesModule() {
           }}
         />
 
+        {/* Filter pills */}
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button onClick={() => { setShowUrgentOnly(u => !u); if (!showUrgentOnly) setShowClosedOnly(false) }}
+          <button
+            onClick={() => setShowUrgentOnly(u => !u)}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
               background: showUrgentOnly ? '#ef4444' : 'var(--color-surface)',
@@ -353,17 +271,19 @@ export default function OpportunitiesModule() {
             🔥 Urgent
           </button>
 
-          <button onClick={() => { setShowClosedOnly(c => !c); if (!showClosedOnly) setShowUrgentOnly(false) }}
+          <button
+            onClick={() => setShowClosed(c => !c)}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
-              background: showClosedOnly ? '#6b7280' : 'var(--color-surface)',
-              color: showClosedOnly ? '#fff' : 'var(--color-muted)',
-              border: `1px solid ${showClosedOnly ? '#6b7280' : 'var(--color-border)'}`,
+              background: showClosed ? '#6b7280' : 'var(--color-surface)',
+              color: showClosed ? '#fff' : 'var(--color-muted)',
+              border: `1px solid ${showClosed ? '#6b7280' : 'var(--color-border)'}`,
             }}>
-            🔒 Closed
+            🔒 Show Closed & Inactive
           </button>
 
-          <button onClick={() => setCategoryFilter('')}
+          <button
+            onClick={() => setCategoryFilter('')}
             className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
             style={{
               background: !categoryFilter ? 'rgba(185,28,28,0.15)' : 'var(--color-surface)',
@@ -374,7 +294,8 @@ export default function OpportunitiesModule() {
           </button>
 
           {allWCCCCategories.map(cat => (
-            <button key={cat} onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
+            <button key={cat}
+              onClick={() => setCategoryFilter(cat === categoryFilter ? '' : cat)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium"
               style={{
                 background: categoryFilter === cat ? 'rgba(185,28,28,0.15)' : 'var(--color-surface)',
@@ -387,10 +308,8 @@ export default function OpportunitiesModule() {
         </div>
 
         <p className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-          <span style={{ color: 'var(--color-gold)' }}>{filtered.length}</span> opportunities
-          {!showClosedOnly && !showUrgentOnly && (
-            <span> · closed & inactive hidden</span>
-          )}
+          <span style={{ color: 'var(--color-gold)' }}>{filtered.length}</span> showing
+          {!showClosed && ' · closed & inactive hidden'}
         </p>
       </div>
 
@@ -409,7 +328,9 @@ export default function OpportunitiesModule() {
           <div className="text-center py-20">
             <p className="text-4xl mb-3">📋</p>
             <p className="font-medium" style={{ color: 'var(--color-text)' }}>No opportunities found</p>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>Try adjusting your filters or search</p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-muted)' }}>
+              {search ? 'Try different search terms' : 'Try adjusting your filters'}
+            </p>
           </div>
         )}
 
