@@ -95,7 +95,8 @@ export function getStatus(opp: Opportunity): 'closed' | 'due_today' | 'urgent' |
   if (isClosed(opp)) return 'closed'
   if (isDueToday(opp)) return 'due_today'
   if (isUrgent(opp)) return 'urgent'
-  if (!opp.active) return 'inactive'
+  // No close_date OR active=false → inactive
+  if (!opp.close_date || !opp.active) return 'inactive'
   return 'open'
 }
 
