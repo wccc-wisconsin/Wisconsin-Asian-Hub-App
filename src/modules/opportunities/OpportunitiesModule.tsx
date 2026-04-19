@@ -19,9 +19,8 @@ const CATEGORY_ICONS: Record<string, string> = {
   'Education & Training':  '📚',
 }
 
-// Determine difficulty level based on title/summary keywords
 function getDifficulty(opp: Opportunity): 'beginner' | 'intermediate' | 'advanced' {
-  const text = `${opp.title} ${opp.summary} ${opp.business_type}`.toLowerCase()
+  const text = `${opp.title} ${opp.summary} ${(opp.business_type ?? []).join(' ')}`.toLowerCase()
   if (
     text.includes('large') || text.includes('major') || text.includes('capital') ||
     text.includes('million') || text.includes('infrastructure') || text.includes('complex') ||
@@ -47,7 +46,6 @@ const DIFFICULTY_STYLE: Record<string, { bg: string; color: string }> = {
   advanced:     { bg: 'rgba(239,68,68,0.12)',  color: '#dc2626' },
 }
 
-// Who Should Apply based on WCCC categories matched
 function WhoShouldApply({ matches }: { matches: string[] }) {
   if (matches.length === 0) return null
   const profiles: Record<string, string> = {
@@ -90,11 +88,11 @@ function OpportunityCard({ opp, featured }: { opp: Opportunity; featured?: boole
   const diffStyle   = DIFFICULTY_STYLE[difficulty]
 
   const borderColor =
-    featured  ? 'rgba(251,191,36,0.5)'      :
-    closed    ? 'rgba(156,163,175,0.3)'     :
-    dueToday  ? 'rgba(220,38,38,0.6)'      :
-    urgent    ? 'rgba(239,68,68,0.4)'      :
-    inactive  ? 'rgba(107,114,128,0.25)'   :
+    featured  ? 'rgba(251,191,36,0.5)'    :
+    closed    ? 'rgba(156,163,175,0.3)'   :
+    dueToday  ? 'rgba(220,38,38,0.6)'     :
+    urgent    ? 'rgba(239,68,68,0.4)'     :
+    inactive  ? 'rgba(107,114,128,0.25)'  :
     'var(--color-border)'
 
   const accentColor =
@@ -170,8 +168,8 @@ function OpportunityCard({ opp, featured }: { opp: Opportunity; featured?: boole
         </div>
 
         {/* Quick snapshot */}
-        <div className="grid grid-cols-2 gap-x-4 gap-y-1">
-          {opp.categories?.filter(Boolean).slice(0, 2).map(cat => (
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+          {(opp.categories ?? []).filter(Boolean).slice(0, 2).map(cat => (
             <div key={cat}>
               <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Category</p>
               <p className="text-xs font-medium" style={{ color: 'var(--color-text)' }}>{cat}</p>
@@ -284,7 +282,12 @@ function HowToBidGuide() {
           <p className="text-sm font-semibold">🏛️ How to Bid on Milwaukee County Contracts</p>
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>Step-by-step guide for WCCC members</p>
         </div>
-        <span className="text-lg" style={{ color: 'var(--color-muted)', transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', display: 'inline-block' }}>⌄</span>
+        <span className="text-lg" style={{
+          color: 'var(--color-muted)',
+          transform: open ? 'rotate(180deg)' : 'none',
+          transition: 'transform 0.2s',
+          display: 'inline-block',
+        }}>⌄</span>
       </button>
 
       {open && (
@@ -310,7 +313,6 @@ function HowToBidGuide() {
             ))}
           </div>
 
-          {/* Who Should Apply */}
           <div className="rounded-lg p-3 space-y-2"
             style={{ background: 'rgba(66,133,244,0.06)', border: '1px solid rgba(66,133,244,0.15)' }}>
             <p className="text-xs font-semibold" style={{ color: '#4285f4' }}>👥 Who Should Apply?</p>
@@ -327,7 +329,6 @@ function HowToBidGuide() {
             ))}
           </div>
 
-          {/* CTA buttons */}
           <div className="grid grid-cols-2 gap-2">
             <a href="https://county.milwaukee.gov/EN/Admin-Services/Bids-and-RFPs"
               target="_blank" rel="noopener noreferrer"
@@ -376,11 +377,11 @@ export default function OpportunitiesModule() {
   const closedCount   = useMemo(() => opportunities.filter(o => isClosed(o)).length, [opportunities])
   const inactiveCount = useMemo(() => opportunities.filter(o => getStatus(o) === 'inactive').length, [opportunities])
 
-  // Featured = beginner-friendly, open, with a close date
+  // Featured: first open/urgent/due_today bid only — never closed or inactive
   const featuredOpp = useMemo(() => {
     return opportunities.find(o => {
       const status = getStatus(o)
-      return status !== 'closed' && status !== 'inactive' && getDifficulty(o) === 'beginner' && o.close_date
+      return status === 'open' || status === 'urgent' || status === 'due_today'
     }) ?? null
   }, [opportunities])
 
@@ -426,7 +427,7 @@ export default function OpportunitiesModule() {
         </p>
       </div>
 
-      {/* Featured Opportunity of the Week */}
+      {/* Featured Opportunity */}
       {featuredOpp && !search && !categoryFilter && !showUrgentOnly && (
         <div className="px-4 mb-2">
           <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-gold)' }}>⭐ Featured Opportunity</p>
