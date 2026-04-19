@@ -36,10 +36,21 @@ export const WCCC_CATEGORIES: Record<string, string[]> = {
 
 export function cleanDateStr(dateStr: string): string {
   return dateStr
-    .replace(/(\d+)(st|nd|rd|th)/g, '$1') // 10th → 10, 1st → 1
-    .replace(/\s+at\s+/gi, ' ')            // "September 26, 2025 at 4:00 PM" → remove "at"
-    .replace(/\s[A-Z]{2,4}$/, '')          // CDT, CST, EST → remove
+    .replace(/(\d+)(st|nd|rd|th)/g, '$1')       // 10th → 10, 1st → 1
+    .replace(/\s+at\s+/gi, ' ')                  // "June 27 at 4:00" → "June 27 4:00"
+    .replace(/\s*@\s*/g, ' ')                    // "June 27 @ 4:00" → "June 27 4:00"
+    .replace(/\b([ap])\.m\./gi, '$1m')           // p.m. → pm, a.m. → am
+    .replace(/^(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),?\s*/i, '') // strip day name
+    .replace(/\s[A-Z]{2,4}$/, '')               // CDT, CST, EST → remove
     .trim()
+}
+
+export function parseDate(dateStr: string): Date | null {
+  if (!dateStr) return null
+  const cleaned = cleanDateStr(dateStr)
+  const d = new Date(cleaned)
+  if (!isNaN(d.getTime())) return d
+  return null
 }
 
 export function matchWCCCCategories(opp: Opportunity): string[] {
@@ -51,8 +62,9 @@ export function matchWCCCCategories(opp: Opportunity): string[] {
 
 export function isClosed(opp: Opportunity): boolean {
   if (!opp.close_date) return false
-  const closeDate = new Date(cleanDateStr(opp.close_date))
-  if (isNaN(closeDate.getTime())) return false
+  const closeDate = parseDate(opp.close_date)
+  // If date can't be parsed, treat as inactive (not open) — safer than assuming active
+  if (!closeDate) return false
   const now = new Date()
   now.setHours(0, 0, 0, 0)
   const close = new Date(closeDate)
@@ -60,35 +72,38 @@ export function isClosed(opp: Opportunity): boolean {
   return close < now
 }
 
+export function isUnparseable(opp: Opportunity): boolean {
+  // close_date exists but can't be parsed — treat as inactive
+  if (!opp.close_date) return false
+  return parseDate(opp.close_date) === null
+}
+
 export function isDueToday(opp: Opportunity): boolean {
   if (!opp.close_date) return false
-  const closeDate = new Date(cleanDateStr(opp.close_date))
-  if (isNaN(closeDate.getTime())) return false
-  const now = new Date()
-  return closeDate.toDateString() === now.toDateString()
+  const closeDate = parseDate(opp.close_date)
+  if (!closeDate) return false
+  return closeDate.toDateString() === new Date().toDateString()
 }
 
 export function isUrgent(opp: Opportunity): boolean {
   if (!opp.close_date) return false
-  const closeDate = new Date(cleanDateStr(opp.close_date))
-  if (isNaN(closeDate.getTime())) return false
-  const now = new Date()
-  const daysLeft = Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const closeDate = parseDate(opp.close_date)
+  if (!closeDate) return false
+  const daysLeft = Math.ceil((closeDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
   return daysLeft > 0 && daysLeft <= 7
 }
 
 export function daysUntilClose(opp: Opportunity): number | null {
   if (!opp.close_date) return null
-  const closeDate = new Date(cleanDateStr(opp.close_date))
-  if (isNaN(closeDate.getTime())) return null
-  const now = new Date()
-  return Math.ceil((closeDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))
+  const closeDate = parseDate(opp.close_date)
+  if (!closeDate) return null
+  return Math.ceil((closeDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
 }
 
 export function formatDate(dateStr: string): string {
   if (!dateStr) return 'TBD'
-  const date = new Date(cleanDateStr(dateStr))
-  if (isNaN(date.getTime())) return dateStr
+  const date = parseDate(dateStr)
+  if (!date) return dateStr // show raw string if unparseable
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
@@ -96,8 +111,8 @@ export function getStatus(opp: Opportunity): 'closed' | 'due_today' | 'urgent' |
   if (isClosed(opp)) return 'closed'
   if (isDueToday(opp)) return 'due_today'
   if (isUrgent(opp)) return 'urgent'
-  // No close_date OR active=false → inactive
-  if (!opp.close_date || !opp.active) return 'inactive'
+  // No close_date, unparseable date, or active=false → inactive
+  if (!opp.close_date || isUnparseable(opp) || !opp.active) return 'inactive'
   return 'open'
 }
 
@@ -115,9 +130,9 @@ export function useOpportunities() {
           const aScore = order[getStatus(a)]
           const bScore = order[getStatus(b)]
           if (aScore !== bScore) return aScore - bScore
-          if (a.close_date && b.close_date) {
-            return new Date(cleanDateStr(a.close_date)).getTime() - new Date(cleanDateStr(b.close_date)).getTime()
-          }
+          const aDate = a.close_date ? parseDate(a.close_date) : null
+          const bDate = b.close_date ? parseDate(b.close_date) : null
+          if (aDate && bDate) return aDate.getTime() - bDate.getTime()
           return 0
         })
       setOpportunities(all)
