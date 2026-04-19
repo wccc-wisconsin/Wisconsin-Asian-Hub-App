@@ -11,8 +11,8 @@ export interface Opportunity {
   source_url: string
   url: string
   categories: string[]
-  content_type: string
-  business_type: string
+  content_type: string[]
+  business_type: string[]
   open_date: string
   close_date: string
   questions_due_date: string
@@ -36,13 +36,14 @@ export const WCCC_CATEGORIES: Record<string, string[]> = {
 
 export function cleanDateStr(dateStr: string): string {
   return dateStr
-    .replace(/(\d+)(st|nd|rd|th)/g, '$1') // 10th → 10, 1st → 1, 2nd → 2, 3rd → 3
-    .replace(/\s[A-Z]{2,4}$/, '')          // remove timezone: CDT, CST, EST, PDT
+    .replace(/(\d+)(st|nd|rd|th)/g, '$1') // 10th → 10, 1st → 1
+    .replace(/\s+at\s+/gi, ' ')            // "September 26, 2025 at 4:00 PM" → remove "at"
+    .replace(/\s[A-Z]{2,4}$/, '')          // CDT, CST, EST → remove
     .trim()
 }
 
 export function matchWCCCCategories(opp: Opportunity): string[] {
-  const text = `${opp.title} ${opp.summary} ${opp.categories?.join(' ')} ${opp.department}`.toLowerCase()
+  const text = `${opp.title} ${opp.summary} ${(opp.categories ?? []).join(' ')} ${opp.department}`.toLowerCase()
   return Object.entries(WCCC_CATEGORIES)
     .filter(([, keywords]) => keywords.some(k => text.includes(k.toLowerCase())))
     .map(([cat]) => cat)
