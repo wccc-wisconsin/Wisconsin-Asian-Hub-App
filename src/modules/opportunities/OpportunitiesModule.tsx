@@ -205,11 +205,20 @@ export default function OpportunitiesModule() {
     })
   }, [opportunities, showClosed, showUrgentOnly, categoryFilter, search])
 
+  // Only show category pills for currently visible bids (respects showClosed toggle)
+  const visibleForCategories = useMemo(() => {
+    return opportunities.filter(o => {
+      const status = getStatus(o)
+      if (!showClosed && (status === 'closed' || status === 'inactive')) return false
+      return true
+    })
+  }, [opportunities, showClosed])
+
   const allWCCCCategories = useMemo(() => {
     const cats = new Set<string>()
-    opportunities.forEach(o => matchWCCCCategories(o).forEach(c => cats.add(c)))
+    visibleForCategories.forEach(o => matchWCCCCategories(o).forEach(c => cats.add(c)))
     return [...cats].sort()
-  }, [opportunities])
+  }, [visibleForCategories])
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
