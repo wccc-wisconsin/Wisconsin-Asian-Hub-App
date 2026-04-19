@@ -22,16 +22,17 @@ export interface Opportunity {
 }
 
 export const WCCC_CATEGORIES: Record<string, string[]> = {
-  'Construction':          ['Construction', 'Building', 'Infrastructure', 'Facilities', 'Renovation', 'Roofing', 'Plumbing', 'Electrical'],
-  'Food & Beverage':       ['Food', 'Catering', 'Restaurant', 'Beverage', 'Dining', 'Kitchen'],
-  'IT & Technology':       ['IT', 'Technology', 'Software', 'Digital', 'Cyber', 'Network', 'Computer', 'Data'],
-  'Professional Services': ['Consulting', 'Legal', 'Accounting', 'Finance', 'Management', 'Audit', 'Advisory'],
-  'Healthcare':            ['Health', 'Medical', 'Dental', 'Mental Health', 'Nursing', 'Clinical'],
-  'Retail & Wholesale':    ['Retail', 'Wholesale', 'Supply', 'Goods', 'Product', 'Equipment'],
-  'Transportation':        ['Transportation', 'Logistics', 'Fleet', 'Transit', 'Delivery', 'Vehicle'],
-  'Real Estate':           ['Real Estate', 'Property', 'Facility', 'Leasing', 'Space'],
-  'Marketing & Media':     ['Marketing', 'Media', 'Advertising', 'Design', 'Print', 'Communications'],
-  'Education & Training':  ['Education', 'Training', 'Workforce', 'Youth', 'Learning'],
+  // Use specific multi-word phrases or unambiguous single words only
+  'Construction':          ['construction', 'renovation', 'roofing', 'plumbing', 'electrical work', 'remodeling', 'demolition', 'concrete', 'masonry', 'hvac', 'structural'],
+  'Food & Beverage':       ['food service', 'catering', 'restaurant', 'beverage', 'dining', 'vending', 'food supply', 'meal'],
+  'IT & Technology':       ['information technology', 'software', 'cybersecurity', 'network infrastructure', 'computer', 'data management', 'tech support', 'telecommunications', 'wireless', 'antenna'],
+  'Professional Services': ['consulting', 'legal services', 'accounting', 'financial services', 'auditing', 'advisory', 'human resources', 'project management'],
+  'Healthcare':            ['healthcare', 'medical', 'dental', 'mental health', 'nursing', 'clinical', 'behavioral health', 'pharmacy'],
+  'Retail & Wholesale':    ['retail', 'wholesale', 'supplies', 'uniforms', 'office supplies', 'janitorial', 'cleaning supplies', 'paper products'],
+  'Transportation':        ['transportation', 'logistics', 'fleet', 'transit', 'vehicle', 'trucking', 'shuttle'],
+  'Real Estate':           ['real estate', 'property acquisition', 'land purchase', 'leasing space', 'property management'],
+  'Marketing & Media':     ['marketing', 'advertising', 'graphic design', 'public relations', 'media', 'printing services', 'signage', 'communications'],
+  'Education & Training':  ['education', 'training program', 'workforce development', 'youth program', 'tutoring'],
 }
 
 export function cleanDateStr(dateStr: string): string {
@@ -56,7 +57,11 @@ export function parseDate(dateStr: string): Date | null {
 export function matchWCCCCategories(opp: Opportunity): string[] {
   const text = `${opp.title} ${opp.summary} ${(opp.categories ?? []).join(' ')} ${opp.department}`.toLowerCase()
   return Object.entries(WCCC_CATEGORIES)
-    .filter(([, keywords]) => keywords.some(k => text.includes(k.toLowerCase())))
+    .filter(([, keywords]) => keywords.some(k => {
+      // Use word-boundary matching to avoid false positives like "ITB" matching "IT"
+      const escaped = k.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      return new RegExp(`\\b${escaped}\\b`).test(text)
+    }))
     .map(([cat]) => cat)
 }
 
