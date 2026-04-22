@@ -373,12 +373,7 @@ export default function SponsorsModule() {
     return unsub
   }, [])
 
-  if (submitting) return <SubmitSponsorForm onClose={() => setSubmitting(false)} />
-
-  if (selectedSponsor) {
-    return <SponsorDetailPage sponsor={selectedSponsor} onBack={() => setSelected(null)} />
-  }
-
+  // All hooks must be before any early returns
   const filtered = useMemo(() => {
     if (tierFilter === 'all') return sponsors
     return sponsors.filter(s => s.tier === tierFilter)
@@ -398,6 +393,13 @@ export default function SponsorsModule() {
       .map(tier => ({ tier, sponsors: filtered.filter(s => s.tier === tier) }))
       .filter(g => g.sponsors.length > 0)
   }, [filtered])
+
+  // Early returns after all hooks
+  if (submitting) return <SubmitSponsorForm onClose={() => setSubmitting(false)} />
+
+  if (selectedSponsor) {
+    return <SponsorDetailPage sponsor={selectedSponsor} onBack={() => setSelected(null)} />
+  }
 
   return (
     <div className="max-w-6xl mx-auto pb-24">
