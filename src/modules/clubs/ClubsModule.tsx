@@ -31,7 +31,7 @@ const CLUBS: Club[] = [
     tagline: 'Building friendships one fairway at a time',
     description: 'The Wisconsin Chinese Golf Club brings together Chinese-American golf enthusiasts across Wisconsin for friendly rounds, tournaments, and networking on the course. Whether you\'re a seasoned golfer or just picking up the sport, everyone is welcome.',
     founded: '2018',
-    members: 45,
+    members: 25,
     contact: 'Golf Club Coordinator',
     email: 'golf@wisccc.org',
     coverColor: 'linear-gradient(135deg, #166534, #15803d, #22c55e)',
