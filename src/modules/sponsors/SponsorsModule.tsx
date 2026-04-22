@@ -86,7 +86,7 @@ function SponsorDetailPage({ sponsor, onBack }: { sponsor: Sponsor; onBack: () =
         <div className="px-6 pb-8 flex flex-col items-center text-center gap-4">
           {sponsor.logo ? (
             <div className="rounded-2xl flex items-center justify-center shadow-xl"
-              style={{ background: '#1e293b', padding: 12, width: 120, height: 120 }}>
+              style={{ background: '#f8fafc', padding: 12, width: 120, height: 120, border: '1px solid rgba(0,0,0,0.08)' }}>
               <img src={sponsor.logo} alt={sponsor.name}
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
@@ -294,7 +294,7 @@ function SponsorCard({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: () => void
       <div className="p-4 space-y-3">
         {/* Logo banner */}
         <div className="w-full rounded-xl flex items-center justify-center mb-1"
-          style={{ background: '#1e293b', height: 80, padding: 12 }}>
+          style={{ background: '#f8fafc', height: 80, padding: 12, border: '1px solid var(--color-border)' }}>
           {sponsor.logo ? (
             <img src={sponsor.logo} alt={sponsor.name}
               style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
