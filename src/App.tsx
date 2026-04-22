@@ -7,9 +7,11 @@ import GivingModule        from './modules/giving/GivingModule'
 import DineModule          from './modules/din/DineModule'
 import EventsModule        from './modules/events/EventsModule'
 import OpportunitiesModule from './modules/opportunities/OpportunitiesModule'
+import ClubsModule         from './modules/clubs/ClubsModule'
+import SponsorsModule      from './modules/sponsors/SponsorsModule'
 import ChatWindow          from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events' | 'opportunities'
+type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events' | 'opportunities' | 'clubs' | 'sponsors'
 
 const TAB_META: Record<Tab, { icon: string; label: string }> = {
   videos:        { icon: '🎬', label: 'Videos'        },
@@ -20,11 +22,13 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
   chat:          { icon: '🤖', label: 'Chat'          },
   events:        { icon: '📅', label: 'Events'        },
   opportunities: { icon: '📌', label: 'Opportunities' },
+  clubs:         { icon: '⛳', label: 'Clubs'         },
+  sponsors:      { icon: '🤝', label: 'Sponsors'     },
 }
 
-const MORE_TABS: Tab[] = ['members', 'board', 'events', 'opportunities', 'chat']
+const MORE_TABS: Tab[] = ['members', 'board', 'events', 'opportunities', 'clubs', 'sponsors', 'chat']
 
-const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events', 'opportunities'])
+const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events', 'opportunities', 'clubs', 'sponsors'])
 
 function parseDeepLink(): { tab: Tab; id?: string } {
   try {
@@ -83,16 +87,14 @@ export default function App() {
       }}>
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-7 h-7 rounded-sm flex items-center justify-center text-sm font-bold"
+            <div className="w-7 h-7 rounded-sm flex items-center justify-center text-sm font-bold text-white"
               style={{ background: 'var(--color-red)' }}>亚</div>
             <span className="font-display font-semibold tracking-tight" style={{ color: 'var(--color-text)' }}>
               Wisconsin Asian Hub
             </span>
           </div>
-          <span className="chip text-xs" style={{
-            background: 'rgba(185,28,28,0.15)', color: 'var(--color-gold)',
-            border: '1px solid rgba(185,28,28,0.3)'
-          }}>
+          <span className="text-xs px-2 py-1 rounded-full"
+            style={{ background: 'rgba(185,28,28,0.15)', color: 'var(--color-gold)', border: '1px solid rgba(185,28,28,0.3)' }}>
             {activeLabel.icon} {activeLabel.label}
           </span>
         </div>
@@ -100,14 +102,16 @@ export default function App() {
 
       {/* Active Module */}
       <main>
-        {tab === 'videos'        && <VideosModule  />}
-        {tab === 'dine'          && <DineModule    deepLinkId={deepLinkId} />}
-        {tab === 'giving'        && <GivingModule  />}
+        {tab === 'videos'        && <VideosModule />}
+        {tab === 'dine'          && <DineModule deepLinkId={deepLinkId} />}
+        {tab === 'giving'        && <GivingModule />}
         {tab === 'members'       && <MembersModule />}
-        {tab === 'board'         && <BoardModule   />}
-        {tab === 'chat'          && <ChatModule    />}
-        {tab === 'events'        && <EventsModule  />}
+        {tab === 'board'         && <BoardModule />}
+        {tab === 'chat'          && <ChatModule />}
+        {tab === 'events'        && <EventsModule />}
         {tab === 'opportunities' && <OpportunitiesModule />}
+        {tab === 'clubs'         && <ClubsModule />}
+        {tab === 'sponsors'      && <SponsorsModule />}
       </main>
 
       {/* Floating chat bubble */}
@@ -136,8 +140,7 @@ export default function App() {
         borderColor: 'var(--color-border)', height: 64, zIndex: 50,
       }}>
         {(['videos', 'dine', 'giving'] as Tab[]).map(t => (
-          <button key={t}
-            onClick={() => navigate(t)}
+          <button key={t} onClick={() => navigate(t)}
             className="flex-1 flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors"
             style={{ color: tab === t ? 'var(--color-red)' : 'var(--color-muted)' }}>
             <span className="text-xl">{TAB_META[t].icon}</span>
@@ -151,12 +154,11 @@ export default function App() {
               style={{
                 background: 'var(--color-surface)',
                 border: '1px solid var(--color-border)',
-                minWidth: 180,
+                minWidth: 190,
                 boxShadow: '0 -8px 32px rgba(0,0,0,0.5)',
               }}>
               {MORE_TABS.map((t, i) => (
-                <button key={t}
-                  onClick={() => navigate(t)}
+                <button key={t} onClick={() => navigate(t)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium transition-colors text-left"
                   style={{
                     color: tab === t ? 'var(--color-red)' : 'var(--color-text)',
