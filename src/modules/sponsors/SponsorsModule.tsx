@@ -85,8 +85,8 @@ function SponsorDetailPage({ sponsor, onBack }: { sponsor: Sponsor; onBack: () =
         {/* Logo + Name */}
         <div className="px-6 pb-8 flex flex-col items-center text-center gap-4">
           {sponsor.logo ? (
-            <div className="w-24 h-24 rounded-2xl flex items-center justify-center shadow-xl"
-              style={{ background: 'rgba(255,255,255,0.95)', padding: 8 }}>
+            <div className="rounded-2xl flex items-center justify-center shadow-xl"
+              style={{ background: '#1e293b', padding: 12, width: 120, height: 120 }}>
               <img src={sponsor.logo} alt={sponsor.name}
                 style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
             </div>
@@ -292,19 +292,19 @@ function SponsorCard({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: () => void
       style={{ background: 'var(--color-surface)', border: `1px solid ${config.cardBorder}` }}>
       <div className="h-1" style={{ background: config.gradient }} />
       <div className="p-4 space-y-3">
-        <div className="flex items-center gap-3">
+        {/* Logo banner */}
+        <div className="w-full rounded-xl flex items-center justify-center mb-1"
+          style={{ background: '#1e293b', height: 80, padding: 12 }}>
           {sponsor.logo ? (
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ background: 'var(--color-bg)', padding: 4 }}>
-              <img src={sponsor.logo} alt={sponsor.name}
-                style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-            </div>
+            <img src={sponsor.logo} alt={sponsor.name}
+              style={{ maxHeight: '100%', maxWidth: '100%', objectFit: 'contain' }} />
           ) : (
-            <div className="w-12 h-12 rounded-xl flex items-center justify-center text-xl font-bold text-white flex-shrink-0"
-              style={{ background: config.gradient }}>
-              {sponsor.name.charAt(0)}
-            </div>
+            <span className="text-3xl font-bold text-white">{sponsor.name.charAt(0)}</span>
           )}
+        </div>
+
+        {/* Name + tier */}
+        <div className="flex items-start justify-between gap-2">
           <div className="flex-1 min-w-0">
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold inline-block mb-1"
               style={{ background: config.badge.bg, color: config.badge.color, border: `1px solid ${config.badge.border}` }}>
@@ -314,12 +314,12 @@ function SponsorCard({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: () => void
               {sponsor.name}
             </h3>
             {sponsor.tagline && (
-              <p className="text-xs mt-0.5 truncate" style={{ color: 'var(--color-muted)' }}>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
                 {sponsor.tagline}
               </p>
             )}
           </div>
-          <span className="text-lg flex-shrink-0" style={{ color: 'var(--color-muted)' }}>›</span>
+          <span className="text-lg flex-shrink-0 mt-1" style={{ color: 'var(--color-muted)' }}>›</span>
         </div>
 
         {sponsor.description && (
