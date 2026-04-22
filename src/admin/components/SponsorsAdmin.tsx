@@ -1,7 +1,27 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import type { Sponsor } from '../../modules/sponsors/SponsorsModule'
+
+interface Sponsor {
+  id: string
+  name: string
+  tier: 'title' | 'gold' | 'silver' | 'community'
+  tagline?: string
+  description?: string
+  logo?: string
+  website?: string
+  email?: string
+  phone?: string
+  address?: string
+  event?: string
+  memberOffer?: string
+  services?: string[]
+  gallery?: string[]
+  contactName?: string
+  active: boolean
+  status?: 'pending' | 'approved'
+  createdAt?: string
+}
 
 const TIERS = [
   { value: 'title',     label: '🌟 Title Sponsor' },
@@ -10,8 +30,14 @@ const TIERS = [
   { value: 'community', label: '🤝 Community Partner' },
 ]
 
+const TIER_ORDER: Record<string, number> = { title: 0, gold: 1, silver: 2, community: 3 }
+
+function isPending(s: Sponsor): boolean {
+  return s.status === 'pending' || s.active === false
+}
+
 function SponsorForm({ onSave, onCancel, initial }: {
-  onSave: (data: Omit<Sponsor, 'id'>) => Promise<void>
+  onSave: (data: Partial<Sponsor>) => Promise<void>
   onCancel: () => void
   initial?: Partial<Sponsor>
 }) {
@@ -35,6 +61,7 @@ function SponsorForm({ onSave, onCancel, initial }: {
     border: '1px solid var(--color-border)', background: 'var(--color-bg)',
     color: 'var(--color-text)', boxSizing: 'border-box' as const,
   }
+  const lbl = { fontSize: 11, fontWeight: 500, color: 'var(--color-muted)', marginBottom: 3, display: 'block' as const }
 
   async function handleSave() {
     if (!name.trim()) return
@@ -45,11 +72,10 @@ function SponsorForm({ onSave, onCancel, initial }: {
       services: servicesRaw.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
       gallery:  galleryRaw.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
       active: true,
+      status: 'approved',
     })
     setSaving(false)
   }
-
-  const lbl = { fontSize: 11, fontWeight: 500, color: 'var(--color-muted)', marginBottom: 3, display: 'block' as const }
 
   return (
     <div className="rounded-xl p-4 space-y-3"
@@ -58,7 +84,6 @@ function SponsorForm({ onSave, onCancel, initial }: {
         {initial?.name ? `✏️ Edit — ${initial.name}` : '➕ Add Sponsor'}
       </p>
 
-      {/* Tier */}
       <div>
         <label style={lbl}>Tier *</label>
         <div className="grid grid-cols-2 gap-2">
@@ -76,60 +101,30 @@ function SponsorForm({ onSave, onCancel, initial }: {
         </div>
       </div>
 
-      {/* Core info */}
-      <div><label style={lbl}>Name *</label><input type="text" placeholder="Sponsor name" value={name} onChange={e => setName(e.target.value)} style={inp} /></div>
-      <div><label style={lbl}>Tagline</label><input type="text" placeholder="Short catchy line" value={tagline} onChange={e => setTagline(e.target.value)} style={inp} /></div>
-      <div>
-        <label style={lbl}>Description</label>
-        <textarea placeholder="Full description of the sponsor..." value={description} onChange={e => setDesc(e.target.value)} rows={4} style={{ ...inp, resize: 'vertical' as const }} />
-      </div>
-
-      {/* Member Offer */}
-      <div>
-        <label style={lbl}>🎁 Exclusive WCCC Member Offer</label>
-        <textarea placeholder="e.g. Free 30-min consultation for WCCC members" value={memberOffer} onChange={e => setOffer(e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' as const }} />
-      </div>
-
-      {/* Services */}
-      <div>
-        <label style={lbl}>Services / Expertise (one per line)</label>
-        <textarea placeholder={"Real Estate\nProperty Management\nInvestment Consulting"} value={servicesRaw} onChange={e => setServices(e.target.value)} rows={4} style={{ ...inp, resize: 'vertical' as const }} />
-      </div>
-
-      {/* Logo */}
+      <div><label style={lbl}>Name *</label><input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Sponsor name" style={inp} /></div>
+      <div><label style={lbl}>Tagline</label><input type="text" value={tagline} onChange={e => setTagline(e.target.value)} placeholder="Short description" style={inp} /></div>
+      <div><label style={lbl}>Description</label><textarea value={description} onChange={e => setDesc(e.target.value)} rows={4} style={{ ...inp, resize: 'vertical' as const }} /></div>
+      <div><label style={lbl}>🎁 Member Offer</label><textarea value={memberOffer} onChange={e => setOffer(e.target.value)} rows={2} style={{ ...inp, resize: 'vertical' as const }} /></div>
+      <div><label style={lbl}>Services (one per line)</label><textarea value={servicesRaw} onChange={e => setServices(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' as const }} /></div>
       <div>
         <label style={lbl}>Logo URL</label>
-        <input type="url" placeholder="https://..." value={logo} onChange={e => setLogo(e.target.value)} style={inp} />
-        {logo && (
-          <div className="mt-2 p-2 rounded-lg inline-block" style={{ background: 'var(--color-bg)' }}>
-            <img src={logo} alt="Logo preview" style={{ height: 48, objectFit: 'contain' }} />
-          </div>
-        )}
+        <input type="url" value={logo} onChange={e => setLogo(e.target.value)} placeholder="https://..." style={inp} />
+        {logo && <img src={logo} alt="preview" style={{ height: 40, marginTop: 6, objectFit: 'contain', borderRadius: 6, background: 'var(--color-bg)', padding: 4 }} />}
       </div>
-
-      {/* Gallery */}
-      <div>
-        <label style={lbl}>Gallery Photo URLs (one per line)</label>
-        <textarea placeholder={"https://photo1.jpg\nhttps://photo2.jpg"} value={galleryRaw} onChange={e => setGallery(e.target.value)} rows={3} style={{ ...inp, resize: 'vertical' as const }} />
+      <div><label style={lbl}>Gallery URLs (one per line)</label><textarea value={galleryRaw} onChange={e => setGallery(e.target.value)} rows={3} placeholder={'https://photo1.jpg\nhttps://photo2.jpg'} style={{ ...inp, resize: 'vertical' as const }} /></div>
+      <div><label style={lbl}>Website</label><input type="url" value={website} onChange={e => setWebsite(e.target.value)} placeholder="https://..." style={inp} /></div>
+      <div className="grid grid-cols-2 gap-2">
+        <div><label style={lbl}>Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inp} /></div>
+        <div><label style={lbl}>Phone</label><input type="tel" value={phone} onChange={e => setPhone(e.target.value)} style={inp} /></div>
       </div>
+      <div><label style={lbl}>Address</label><input type="text" value={address} onChange={e => setAddress(e.target.value)} style={inp} /></div>
+      <div><label style={lbl}>Associated Event</label><input type="text" value={event} onChange={e => setEvent(e.target.value)} placeholder="e.g. Gateway to Asia Festival 2026" style={inp} /></div>
 
-      {/* Contact */}
-      <div className="rounded-lg p-3 space-y-2" style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)' }}>
-        <p style={{ ...lbl, marginBottom: 6 }}>Contact Info</p>
-        <input type="url"   placeholder="Website URL"   value={website} onChange={e => setWebsite(e.target.value)} style={inp} />
-        <input type="email" placeholder="Email"         value={email}   onChange={e => setEmail(e.target.value)}   style={{ ...inp, marginTop: 6 }} />
-        <input type="tel"   placeholder="Phone"         value={phone}   onChange={e => setPhone(e.target.value)}   style={{ ...inp, marginTop: 6 }} />
-        <input type="text"  placeholder="Address"       value={address} onChange={e => setAddress(e.target.value)} style={{ ...inp, marginTop: 6 }} />
-      </div>
-
-      {/* Event */}
-      <div><label style={lbl}>Associated Event</label><input type="text" placeholder="e.g. Gateway to Asia Festival 2026" value={event} onChange={e => setEvent(e.target.value)} style={inp} /></div>
-
-      <div className="flex gap-2 pt-1">
+      <div className="flex gap-2">
         <button onClick={handleSave} disabled={!name.trim() || saving}
           className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-40"
           style={{ background: 'var(--color-red)', color: '#fff' }}>
-          {saving ? '...' : '💾 Save Sponsor'}
+          {saving ? '...' : '💾 Save'}
         </button>
         <button onClick={onCancel}
           className="px-4 py-2.5 rounded-lg text-sm"
@@ -142,57 +137,87 @@ function SponsorForm({ onSave, onCancel, initial }: {
 }
 
 function SponsorRow({ sponsor, onEdit }: { sponsor: Sponsor; onEdit: () => void }) {
-  const tierColors: Record<string, string> = {
-    title: '#d97706', gold: '#b45309', silver: '#6b7280', community: '#059669'
+  const pending = isPending(sponsor)
+
+  async function handleApprove() {
+    await updateDoc(doc(db, 'sponsors', sponsor.id), { active: true, status: 'approved' })
   }
 
-  async function handleToggle() {
-    await updateDoc(doc(db, 'sponsors', sponsor.id), { active: !sponsor.active })
+  async function handleHide() {
+    await updateDoc(doc(db, 'sponsors', sponsor.id), { active: false, status: 'approved' })
   }
+
   async function handleDelete() {
     if (!confirm(`Delete ${sponsor.name}?`)) return
     await deleteDoc(doc(db, 'sponsors', sponsor.id))
   }
 
   return (
-    <div className="rounded-xl p-3 space-y-2"
-      style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', opacity: sponsor.active ? 1 : 0.6 }}>
+    <div className="rounded-xl p-3 space-y-2" style={{
+      background: 'var(--color-surface)',
+      border: `1px solid ${pending ? 'rgba(251,191,36,0.3)' : 'var(--color-border)'}`,
+      opacity: !sponsor.active && !pending ? 0.6 : 1,
+    }}>
       <div className="flex items-center gap-3">
         {sponsor.logo ? (
           <img src={sponsor.logo} alt={sponsor.name} className="w-10 h-10 rounded-lg flex-shrink-0"
             style={{ objectFit: 'contain', background: 'var(--color-bg)', padding: 2 }} />
         ) : (
           <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 text-lg font-bold text-white"
-            style={{ background: tierColors[sponsor.tier] }}>
+            style={{ background: '#6b7280' }}>
             {sponsor.name.charAt(0)}
           </div>
         )}
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{sponsor.name}</p>
           <p className="text-xs truncate" style={{ color: 'var(--color-muted)' }}>
-            {TIERS.find(t => t.value === sponsor.tier)?.label}
+            {TIERS.find(t => t.value === sponsor.tier)?.label ?? sponsor.tier}
             {sponsor.event ? ` · ${sponsor.event}` : ''}
           </p>
+          {sponsor.contactName && (
+            <p className="text-xs" style={{ color: 'var(--color-muted)' }}>Contact: {sponsor.contactName}</p>
+          )}
         </div>
         <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-          style={{ background: sponsor.active ? 'rgba(34,197,94,0.15)' : 'rgba(107,114,128,0.15)', color: sponsor.active ? '#22c55e' : '#6b7280' }}>
-          {sponsor.active ? 'Live' : 'Hidden'}
+          style={{
+            background: pending ? 'rgba(251,191,36,0.15)' : sponsor.active ? 'rgba(34,197,94,0.15)' : 'rgba(107,114,128,0.15)',
+            color: pending ? '#d97706' : sponsor.active ? '#22c55e' : '#6b7280',
+          }}>
+          {pending ? 'Pending' : sponsor.active ? 'Live' : 'Hidden'}
         </span>
       </div>
+
       {sponsor.memberOffer && (
         <p className="text-xs truncate" style={{ color: '#d97706' }}>🎁 {sponsor.memberOffer}</p>
       )}
+
       <div className="flex gap-2 flex-wrap">
         <button onClick={onEdit}
           className="px-3 py-1.5 rounded-lg text-xs font-medium"
           style={{ background: 'var(--color-bg)', color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
           ✏️ Edit
         </button>
-        <button onClick={handleToggle}
-          className="px-3 py-1.5 rounded-lg text-xs font-medium"
-          style={{ background: 'rgba(66,133,244,0.1)', color: '#4285f4', border: '1px solid rgba(66,133,244,0.2)' }}>
-          {sponsor.active ? '🙈 Hide' : '👁 Show'}
-        </button>
+        {pending && (
+          <button onClick={handleApprove}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(34,197,94,0.15)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
+            ✅ Approve & Publish
+          </button>
+        )}
+        {!pending && sponsor.active && (
+          <button onClick={handleHide}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(107,114,128,0.1)', color: '#6b7280', border: '1px solid rgba(107,114,128,0.2)' }}>
+            🙈 Hide
+          </button>
+        )}
+        {!pending && !sponsor.active && (
+          <button onClick={handleApprove}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium"
+            style={{ background: 'rgba(66,133,244,0.1)', color: '#4285f4', border: '1px solid rgba(66,133,244,0.2)' }}>
+            👁 Show
+          </button>
+        )}
         <button onClick={handleDelete}
           className="px-3 py-1.5 rounded-lg text-xs font-medium"
           style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -211,39 +236,44 @@ export default function SponsorsAdmin() {
   useEffect(() => {
     const unsub = onSnapshot(query(collection(db, 'sponsors')), snap => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Sponsor))
-      const order: Record<string, number> = { title: 0, gold: 1, silver: 2, community: 3 }
-      // Pending submissions first, then by tier
       docs.sort((a, b) => {
-        const aStatus = (a as any).status === 'pending' ? -1 : 0
-        const bStatus = (b as any).status === 'pending' ? -1 : 0
-        if (aStatus !== bStatus) return aStatus - bStatus
-        return (order[a.tier] ?? 99) - (order[b.tier] ?? 99)
+        // Pending first
+        const aPending = isPending(a) ? 0 : 1
+        const bPending = isPending(b) ? 0 : 1
+        if (aPending !== bPending) return aPending - bPending
+        // Then by tier
+        return (TIER_ORDER[a.tier] ?? 99) - (TIER_ORDER[b.tier] ?? 99)
       })
       setSponsors(docs)
     })
     return unsub
   }, [])
 
-  async function handleAdd(data: Omit<Sponsor, 'id'>) {
+  async function handleAdd(data: Partial<Sponsor>) {
     await setDoc(doc(db, 'sponsors', `${Date.now()}`), {
       ...data, createdAt: new Date().toISOString(),
     })
     setAdding(false)
   }
 
-  async function handleEdit(data: Omit<Sponsor, 'id'>) {
+  async function handleEdit(data: Partial<Sponsor>) {
     if (!editing) return
     await updateDoc(doc(db, 'sponsors', editing.id), data)
     setEditing(null)
   }
 
+  const pending  = sponsors.filter(s => isPending(s))
+  const approved = sponsors.filter(s => !isPending(s))
+
   return (
     <div className="space-y-4">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>🤝 Sponsors & Partners</h3>
           <p className="text-xs mt-0.5" style={{ color: 'var(--color-muted)' }}>
-            {sponsors.length} sponsors · {sponsors.filter(s => s.active).length} live
+            {sponsors.length} total · {approved.filter(s => s.active).length} live
+            {pending.length > 0 && <span style={{ color: '#d97706' }}> · {pending.length} pending</span>}
           </p>
         </div>
         {!adding && !editing && (
@@ -258,44 +288,34 @@ export default function SponsorsAdmin() {
       {adding  && <SponsorForm onSave={handleAdd}  onCancel={() => setAdding(false)} />}
       {editing && <SponsorForm onSave={handleEdit} onCancel={() => setEditing(null)} initial={editing} />}
 
+      {/* Pending */}
+      {pending.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold" style={{ color: '#d97706' }}>⏳ Pending Review ({pending.length})</p>
+          {pending.map(s => editing?.id === s.id ? null : (
+            <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
+          ))}
+        </div>
+      )}
+
+      {/* Approved */}
+      {approved.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-semibold" style={{ color: 'var(--color-muted)' }}>
+            All Sponsors ({approved.length})
+          </p>
+          {approved.map(s => editing?.id === s.id ? null : (
+            <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
+          ))}
+        </div>
+      )}
+
       {sponsors.length === 0 && !adding && (
         <div className="text-center py-8" style={{ color: 'var(--color-muted)' }}>
           <p className="text-3xl mb-2">🤝</p>
           <p className="text-xs">No sponsors yet. Click "Add Sponsor" to get started.</p>
         </div>
       )}
-
-      {/* Pending submissions */}
-      {sponsors.filter(s => (s as any).status === 'pending').length > 0 && (
-        <div>
-          <p className="text-xs font-semibold mb-2" style={{ color: '#fbbf24' }}>
-            ⏳ Pending Review ({sponsors.filter(s => (s as any).status === 'pending').length})
-          </p>
-          <div className="space-y-2">
-            {sponsors
-              .filter(s => (s as any).status === 'pending')
-              .map(s => editing?.id === s.id ? null :
-                <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
-              )}
-          </div>
-        </div>
-      )}
-
-      {/* All sponsors */}
-      <div>
-        {sponsors.filter(s => (s as any).status !== 'pending').length > 0 && (
-          <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-muted)' }}>
-            All Sponsors ({sponsors.filter(s => (s as any).status !== 'pending').length})
-          </p>
-        )}
-        <div className="space-y-2">
-          {sponsors
-            .filter(s => (s as any).status !== 'pending')
-            .map(s => editing?.id === s.id ? null :
-              <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
-            )}
-        </div>
-      </div>
     </div>
   )
 }
