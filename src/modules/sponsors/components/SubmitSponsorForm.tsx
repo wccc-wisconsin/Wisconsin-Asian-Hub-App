@@ -20,39 +20,40 @@ interface SubmitSponsorFormProps {
   onClose: () => void
 }
 
+const inp = {
+  width: '100%', padding: '10px 14px', borderRadius: 10,
+  border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+  color: 'var(--color-text)', fontSize: '16px', outline: 'none',
+  boxSizing: 'border-box' as const,
+}
+const inpAI      = { ...inp, border: '1px solid rgba(22,163,74,0.4)', background: 'rgba(22,163,74,0.05)' }
+const inpMissing = { ...inp, border: '1px solid rgba(251,191,36,0.5)', background: 'rgba(251,191,36,0.05)' }
+const lbl = { fontSize: 12, fontWeight: 500, color: 'var(--color-muted)', marginBottom: 4, display: 'block' as const }
+
 export default function SubmitSponsorForm({ onClose }: SubmitSponsorFormProps) {
-  const [phase, setPhase]         = useState<Phase>('paste')
-  const [pasteText, setPaste]     = useState('')
-  const [extracted, setExtracted] = useState<ExtractedSponsor>({})
-  const [error, setError]         = useState('')
+  const [phase, setPhase]           = useState<Phase>('paste')
+  const [pasteText, setPaste]       = useState('')
+  const [extracted, setExtracted]   = useState<ExtractedSponsor>({})
+  const [error, setError]           = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  // Form fields
-  const [name, setName]           = useState('')
-  const [tagline, setTagline]     = useState('')
-  const [description, setDesc]    = useState('')
-  const [website, setWebsite]     = useState('')
-  const [email, setEmail]         = useState('')
-  const [phone, setPhone]         = useState('')
-  const [address, setAddress]     = useState('')
-  const [memberOffer, setOffer]   = useState('')
-  const [servicesRaw, setServices] = useState('')
-  const [logo, setLogo]           = useState('')
-  const [photo1, setPhoto1]       = useState('')
-  const [photo2, setPhoto2]       = useState('')
-  const [photo3, setPhoto3]       = useState('')
-  const [photo4, setPhoto4]       = useState('')
+  const [name, setName]             = useState('')
+  const [tagline, setTagline]       = useState('')
+  const [description, setDesc]      = useState('')
+  const [website, setWebsite]       = useState('')
+  const [email, setEmail]           = useState('')
+  const [phone, setPhone]           = useState('')
+  const [address, setAddress]       = useState('')
+  const [memberOffer, setOffer]     = useState('')
+  const [servicesRaw, setServices]  = useState('')
+  const [logo, setLogo]             = useState('')
+  const [photo1, setPhoto1]         = useState('')
+  const [photo2, setPhoto2]         = useState('')
+  const [photo3, setPhoto3]         = useState('')
+  const [photo4, setPhoto4]         = useState('')
   const [contactName, setContactName] = useState('')
 
-  const inp = {
-    width: '100%', padding: '10px 14px', borderRadius: 10,
-    border: '1px solid var(--color-border)', background: 'var(--color-surface)',
-    color: 'var(--color-text)', fontSize: '16px', outline: 'none',
-    boxSizing: 'border-box' as const,
-  }
-  const inpAI      = { ...inp, border: '1px solid rgba(22,163,74,0.4)', background: 'rgba(22,163,74,0.05)' }
-  const inpMissing = { ...inp, border: '1px solid rgba(251,191,36,0.5)', background: 'rgba(251,191,36,0.05)' }
-  const lbl = { fontSize: 12, fontWeight: 500, color: 'var(--color-muted)', marginBottom: 4, display: 'block' as const }
+  // All hooks above — no early returns before this point
 
   function populateFields(data: ExtractedSponsor) {
     if (data.name)        setName(data.name)
@@ -127,13 +128,12 @@ Return ONLY valid JSON, nothing else.`
     try {
       await addDoc(collection(db, 'sponsors'), {
         name, tagline, description, website, email, phone, address,
-        memberOffer,
-        logo,
-        services: servicesRaw.split('\n').map(s => s.trim()).filter(Boolean),
-        gallery:  [photo1, photo2, photo3, photo4].filter(Boolean),
+        memberOffer, logo,
+        services: servicesRaw.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
+        gallery:  [photo1, photo2, photo3, photo4].filter((s: string) => s.length > 0),
         contactName,
-        tier: 'community', // default — admin sets final tier
-        active: false,     // pending admin approval
+        tier: 'community',
+        active: false,
         status: 'pending',
         createdAt: serverTimestamp(),
       })
@@ -146,22 +146,25 @@ Return ONLY valid JSON, nothing else.`
 
   const isValid = name && contactName
 
-  if (phase === 'done') return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
-      style={{ background: 'var(--color-bg)' }}>
-      <div className="text-5xl mb-4">🎉</div>
-      <h2 className="font-display text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
-        Submitted!
-      </h2>
-      <p className="text-sm leading-relaxed mb-6 max-w-xs" style={{ color: 'var(--color-muted)' }}>
-        Thank you! Your sponsorship profile has been submitted for review. WCCC will be in touch shortly.
-      </p>
-      <button onClick={onClose} className="px-6 py-3 rounded-full text-sm font-semibold"
-        style={{ background: 'var(--color-red)', color: '#fff' }}>
-        Back to Sponsors
-      </button>
-    </div>
-  )
+  // Done screen
+  if (phase === 'done') {
+    return (
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 text-center"
+        style={{ background: 'var(--color-bg)' }}>
+        <div className="text-5xl mb-4">🎉</div>
+        <h2 className="font-display text-2xl font-bold mb-2" style={{ color: 'var(--color-text)' }}>
+          Submitted!
+        </h2>
+        <p className="text-sm leading-relaxed mb-6 max-w-xs" style={{ color: 'var(--color-muted)' }}>
+          Thank you! Your sponsorship profile has been submitted for review. WCCC will be in touch shortly.
+        </p>
+        <button onClick={onClose} className="px-6 py-3 rounded-full text-sm font-semibold"
+          style={{ background: 'var(--color-red)', color: '#fff' }}>
+          Back to Sponsors
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col" style={{ background: 'var(--color-bg)' }}>
@@ -201,14 +204,14 @@ Return ONLY valid JSON, nothing else.`
                 🤖 Smart Paste — AI fills the form for you
               </p>
               <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
-                Copy your company info from your website, LinkedIn, or any source and paste it below. AI extracts everything automatically.
+                Copy your company info from your website, LinkedIn, or any source and paste below. AI extracts everything automatically.
               </p>
             </div>
 
             <div>
               <label style={lbl}>Paste your company info *</label>
               <textarea
-                placeholder={`Paste your company description, about page, or LinkedIn bio here...\n\nExample:\n"PKSD is a full-service law firm serving Wisconsin businesses since 1985. We specialize in business law, real estate, employment law, and litigation. Our team of 40+ attorneys is dedicated to providing exceptional legal services to businesses of all sizes across Wisconsin."`}
+                placeholder="Paste your company description, about page, or LinkedIn bio here..."
                 value={pasteText}
                 onChange={e => { setPaste(e.target.value); setError('') }}
                 rows={8}
@@ -219,7 +222,7 @@ Return ONLY valid JSON, nothing else.`
             {error && <p className="text-xs" style={{ color: '#ef4444' }}>{error}</p>}
 
             <button onClick={handleExtract} disabled={!pasteText.trim()}
-              className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2 disabled:opacity-40"
+              className="w-full py-3 rounded-xl text-sm font-semibold disabled:opacity-40"
               style={{ background: 'var(--color-red)', color: '#fff' }}>
               🤖 Extract with AI →
             </button>
@@ -242,10 +245,8 @@ Return ONLY valid JSON, nothing else.`
             </p>
             <div className="flex gap-1.5">
               {[0, 1, 2].map(i => (
-                <div key={i} className="w-2 h-2 rounded-full" style={{
-                  background: 'var(--color-red)',
-                  animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
-                }} />
+                <div key={i} className="w-2 h-2 rounded-full"
+                  style={{ background: 'var(--color-red)', opacity: 0.7 + i * 0.1 }} />
               ))}
             </div>
             <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
@@ -309,7 +310,7 @@ Return ONLY valid JSON, nothing else.`
 
               <div>
                 <label style={lbl}>Services / Expertise (one per line)</label>
-                <textarea placeholder={"Business Law\nReal Estate\nEmployment Law"}
+                <textarea placeholder={'Business Law\nReal Estate\nEmployment Law'}
                   value={servicesRaw} onChange={e => setServices(e.target.value)} rows={4}
                   style={{ ...('services' in extracted ? inpAI : inp), resize: 'vertical' as const }} />
               </div>
@@ -319,7 +320,7 @@ Return ONLY valid JSON, nothing else.`
             <div className="space-y-3">
               <p className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>📸 Logo & Photos</p>
               <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                Paste public image URLs (right-click any image online → Copy image address)
+                Paste public image URLs (right-click any image → Copy image address)
               </p>
 
               <div>
@@ -333,14 +334,14 @@ Return ONLY valid JSON, nothing else.`
                 )}
               </div>
 
-              {[
+              {([
                 { label: 'Gallery Photo 1', value: photo1, set: setPhoto1 },
                 { label: 'Gallery Photo 2', value: photo2, set: setPhoto2 },
                 { label: 'Gallery Photo 3', value: photo3, set: setPhoto3 },
                 { label: 'Gallery Photo 4', value: photo4, set: setPhoto4 },
-              ].map(({ label, value, set }) => (
+              ] as { label: string; value: string; set: (v: string) => void }[]).map(({ label, value, set }) => (
                 <div key={label}>
-                  <label style={lbl}>{label} URL (optional)</label>
+                  <label style={lbl}>{label} (optional)</label>
                   <input type="url" placeholder="https://..." value={value}
                     onChange={e => set(e.target.value)} style={inp} />
                   {value && (
@@ -396,19 +397,12 @@ Return ONLY valid JSON, nothing else.`
                 value={contactName} onChange={e => setContactName(e.target.value)}
                 style={!contactName ? inpMissing : inp} />
               <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-                WCCC will use this to follow up with you before publishing
+                WCCC will use this to follow up before publishing
               </p>
             </div>
           </div>
         )}
       </div>
-
-      <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0) }
-          30% { transform: translateY(-6px) }
-        }
-      `}</style>
     </div>
   )
 }
