@@ -8,8 +8,9 @@ import DineAdmin from './components/DineAdmin'
 import EventsAdmin from './components/EventsAdmin'
 import MembersEnrichmentAdmin from './components/MembersEnrichmentAdmin'
 import BusinessDiscoveryAdmin from './components/BusinessDiscoveryAdmin'
+import SponsorsAdmin          from './components/SponsorsAdmin'
 
-type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'discovery' | 'admins'
+type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'discovery' | 'sponsors' | 'admins'
 
 const ADMIN_TABS = [
   { id: 'dine',      icon: '🍜', label: 'Dine'      },
@@ -18,6 +19,7 @@ const ADMIN_TABS = [
   { id: 'events',    icon: '📅', label: 'Events'    },
   { id: 'members',   icon: '👥', label: 'Members'   },
   { id: 'discovery', icon: '🔍', label: 'Discovery' },
+  { id: 'sponsors',  icon: '🤝', label: 'Sponsors'  },
   { id: 'admins',    icon: '👤', label: 'Admins'    },
 ] as const
 
@@ -108,6 +110,7 @@ export default function AdminPage() {
         {tab === 'events'    && <EventsAdmin />}
         {tab === 'members'   && <MembersEnrichmentAdmin />}
         {tab === 'discovery' && <BusinessDiscoveryAdmin />}
+        {tab === 'sponsors'  && <SponsorsAdmin />}
         {tab === 'admins'    && <AdminUsersPanel currentEmail={user.email ?? ''} />}
       </div>
     </div>
