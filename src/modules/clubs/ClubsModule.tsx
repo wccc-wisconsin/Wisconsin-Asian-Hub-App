@@ -67,8 +67,6 @@ const COMING_SOON = [
 ]
 
 function PhotoGallery({ photos, clubName }: { photos: string[]; clubName: string }) {
-  const placeholders = Array.from({ length: 6 })
-
   return (
     <div>
       <h3 className="font-semibold text-sm mb-3" style={{ color: 'var(--color-text)' }}>📸 Photo Gallery</h3>
