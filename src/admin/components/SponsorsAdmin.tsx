@@ -42,8 +42,8 @@ function SponsorForm({ onSave, onCancel, initial }: {
     await onSave({
       name, tier, tagline, description, logo, website,
       email, phone, address, event, memberOffer,
-      services: servicesRaw.split('\n').map(s => s.trim()).filter(Boolean),
-      gallery:  galleryRaw.split('\n').map(s => s.trim()).filter(Boolean),
+      services: servicesRaw.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
+      gallery:  galleryRaw.split('\n').map((s: string) => s.trim()).filter((s: string) => s.length > 0),
       active: true,
     })
     setSaving(false)
@@ -210,12 +210,16 @@ export default function SponsorsAdmin() {
 
   useEffect(() => {
     const unsub = onSnapshot(query(collection(db, 'sponsors')), snap => {
-      setSponsors(snap.docs
-        .map(d => ({ id: d.id, ...d.data() } as Sponsor))
-        .sort((a, b) => {
-          const order = { title: 0, gold: 1, silver: 2, community: 3 }
-          return order[a.tier] - order[b.tier]
-        }))
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() } as Sponsor))
+      const order: Record<string, number> = { title: 0, gold: 1, silver: 2, community: 3 }
+      // Pending submissions first, then by tier
+      docs.sort((a, b) => {
+        const aStatus = (a as any).status === 'pending' ? -1 : 0
+        const bStatus = (b as any).status === 'pending' ? -1 : 0
+        if (aStatus !== bStatus) return aStatus - bStatus
+        return (order[a.tier] ?? 99) - (order[b.tier] ?? 99)
+      })
+      setSponsors(docs)
     })
     return unsub
   }, [])
@@ -261,11 +265,36 @@ export default function SponsorsAdmin() {
         </div>
       )}
 
-      <div className="space-y-2">
-        {sponsors.map(s =>
-          editing?.id === s.id ? null :
-          <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
+      {/* Pending submissions */}
+      {sponsors.filter(s => (s as any).status === 'pending').length > 0 && (
+        <div>
+          <p className="text-xs font-semibold mb-2" style={{ color: '#fbbf24' }}>
+            ⏳ Pending Review ({sponsors.filter(s => (s as any).status === 'pending').length})
+          </p>
+          <div className="space-y-2">
+            {sponsors
+              .filter(s => (s as any).status === 'pending')
+              .map(s => editing?.id === s.id ? null :
+                <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
+              )}
+          </div>
+        </div>
+      )}
+
+      {/* All sponsors */}
+      <div>
+        {sponsors.filter(s => (s as any).status !== 'pending').length > 0 && (
+          <p className="text-xs font-semibold mb-2" style={{ color: 'var(--color-muted)' }}>
+            All Sponsors ({sponsors.filter(s => (s as any).status !== 'pending').length})
+          </p>
         )}
+        <div className="space-y-2">
+          {sponsors
+            .filter(s => (s as any).status !== 'pending')
+            .map(s => editing?.id === s.id ? null :
+              <SponsorRow key={s.id} sponsor={s} onEdit={() => setEditing(s)} />
+            )}
+        </div>
       </div>
     </div>
   )
