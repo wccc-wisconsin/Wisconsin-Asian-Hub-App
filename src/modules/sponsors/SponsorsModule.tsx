@@ -323,9 +323,20 @@ function SponsorCard({ sponsor, onOpen }: { sponsor: Sponsor; onOpen: () => void
         </div>
 
         {sponsor.description && (
-          <p className="text-xs leading-relaxed line-clamp-2" style={{ color: 'var(--color-muted)' }}>
-            {sponsor.description}
-          </p>
+          <div>
+            <p className="text-xs leading-relaxed" style={{
+              color: 'var(--color-muted)',
+              display: '-webkit-box',
+              WebkitLineClamp: 4,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}>
+              {sponsor.description}
+            </p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-red)' }}>
+              Tap to read more →
+            </p>
+          </div>
         )}
 
         {sponsor.memberOffer && (
