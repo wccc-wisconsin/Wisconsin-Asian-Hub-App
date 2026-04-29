@@ -184,12 +184,14 @@ export default function EventCard({ event }: EventCardProps) {
                 📋 View Event →
               </a>
             )}
-            <button
-              onClick={() => addToCalendar(e)}
-              className="text-xs font-semibold py-2 px-3 rounded-lg"
-              style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(251,191,36,0.25)' }}>
-              📅 Save
-            </button>
+            {new Date(event.startDate) >= new Date() && (
+              <button
+                onClick={() => addToCalendar(e)}
+                className="text-xs font-semibold py-2 px-3 rounded-lg"
+                style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(251,191,36,0.25)' }}>
+                📅 Save
+              </button>
+            )}
           </div>
         </div>
 
