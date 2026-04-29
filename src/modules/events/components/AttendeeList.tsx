@@ -4,6 +4,7 @@ import { useAttendees, getPublicName } from '../../../hooks/useAttendees'
 interface AttendeeListProps {
   eventId: string
   onRSVP: () => void
+  isPast?: boolean
 }
 
 function getInitials(name: string): string {
@@ -17,7 +18,7 @@ function getColor(name: string): string {
   return colors[Math.abs(hash) % colors.length]
 }
 
-export default function AttendeeList({ eventId, onRSVP }: AttendeeListProps) {
+export default function AttendeeList({ eventId, onRSVP, isPast = false }: AttendeeListProps) {
   const { attendees, loading } = useAttendees(eventId)
   const [showAll, setShowAll]  = useState(false)
 
@@ -32,20 +33,27 @@ export default function AttendeeList({ eventId, onRSVP }: AttendeeListProps) {
 
   if (loading) return (
     <div className="pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
-      <button onClick={onRSVP}
-        className="w-full py-2.5 rounded-xl text-sm font-semibold"
-        style={{ background: 'var(--color-red)', color: '#fff' }}>
-        🎟️ RSVP for this event
-      </button>
+      {!isPast && (
+        <button onClick={onRSVP}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold"
+          style={{ background: 'var(--color-red)', color: '#fff' }}>
+          🎟️ RSVP for this event
+        </button>
+      )}
     </div>
   )
   if (total === 0) return (
     <div className="pt-3 border-t" style={{ borderColor: 'var(--color-border)' }}>
-      <button onClick={onRSVP}
-        className="w-full py-2.5 rounded-xl text-sm font-semibold"
-        style={{ background: 'var(--color-red)', color: '#fff' }}>
-        🎟️ RSVP — Be the first!
-      </button>
+      {!isPast && (
+        <button onClick={onRSVP}
+          className="w-full py-2.5 rounded-xl text-sm font-semibold"
+          style={{ background: 'var(--color-red)', color: '#fff' }}>
+          🎟️ RSVP — Be the first!
+        </button>
+      )}
+      {isPast && total === 0 && (
+        <p className="text-xs text-center py-1" style={{ color: 'var(--color-muted)' }}>No RSVPs recorded</p>
+      )}
     </div>
   )
 
@@ -82,11 +90,13 @@ export default function AttendeeList({ eventId, onRSVP }: AttendeeListProps) {
             {total} {total === 1 ? 'person' : 'people'} going
           </p>
         </div>
-        <button onClick={onRSVP}
-          className="text-xs font-semibold px-3 py-1.5 rounded-full"
-          style={{ background: 'var(--color-red)', color: '#fff' }}>
-          + Join them
-        </button>
+        {!isPast && (
+          <button onClick={onRSVP}
+            className="text-xs font-semibold px-3 py-1.5 rounded-full"
+            style={{ background: 'var(--color-red)', color: '#fff' }}>
+            + Join them
+          </button>
+        )}
       </div>
 
       {/* Attendee name list */}

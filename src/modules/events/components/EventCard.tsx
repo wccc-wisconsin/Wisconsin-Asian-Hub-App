@@ -195,7 +195,7 @@ export default function EventCard({ event }: EventCardProps) {
 
         {/* Attendee list */}
         <div className="px-4">
-          <AttendeeList eventId={event.id} onRSVP={() => setRsvping(true)} />
+          <AttendeeList eventId={event.id} onRSVP={() => setRsvping(true)} isPast={new Date(event.startDate) < new Date()} />
         </div>
 
         {/* Comments */}
