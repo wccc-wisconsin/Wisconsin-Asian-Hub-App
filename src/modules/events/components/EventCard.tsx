@@ -170,12 +170,19 @@ export default function EventCard({ event }: EventCardProps) {
           {/* Actions */}
           <div className="flex gap-2 mb-3">
             {event.url && (
-              <button
-                onClick={() => window.open(event.url!, '_blank', 'noopener,noreferrer')}
+              <a
+                href={event.url.startsWith('http') ? event.url : `https://${event.url}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={e => {
+                  e.stopPropagation()
+                  const url = event.url!.startsWith('http') ? event.url! : `https://${event.url!}`
+                  window.location.href = url
+                }}
                 className="flex-1 text-center text-xs font-semibold py-2 rounded-lg"
-                style={{ background: 'rgba(185,28,28,0.08)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.2)' }}>
+                style={{ background: 'rgba(185,28,28,0.08)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.2)', display: 'block' }}>
                 📋 View Event →
-              </button>
+              </a>
             )}
             <button
               onClick={() => addToCalendar(e)}
