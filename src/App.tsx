@@ -8,10 +8,11 @@ import DineModule          from './modules/din/DineModule'
 import EventsModule        from './modules/events/EventsModule'
 import OpportunitiesModule from './modules/opportunities/OpportunitiesModule'
 import ClubsModule         from './modules/clubs/ClubsModule'
-import SponsorsModule      from './modules/sponsors/SponsorsModule'
+import SponsorsModule         from './modules/sponsors/SponsorsModule'
+import TrustedResourcesModule from './modules/resources/TrustedResourcesModule'
 import ChatWindow          from './modules/chat/components/ChatWindow'
 
-type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events' | 'opportunities' | 'clubs' | 'sponsors'
+type Tab = 'videos' | 'dine' | 'giving' | 'members' | 'board' | 'chat' | 'events' | 'opportunities' | 'clubs' | 'sponsors' | 'resources'
 
 const TAB_META: Record<Tab, { icon: string; label: string }> = {
   videos:        { icon: '🎬', label: 'Videos'        },
@@ -24,11 +25,12 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
   opportunities: { icon: '📌', label: 'Opportunities' },
   clubs:         { icon: '⛳', label: 'Clubs'         },
   sponsors:      { icon: '🤝', label: 'Sponsors'     },
+  resources:     { icon: '⭐', label: 'Resources'    },
 }
 
-const MORE_TABS: Tab[] = ['members', 'board', 'events', 'opportunities', 'clubs', 'sponsors', 'chat']
+const MORE_TABS: Tab[] = ['members', 'board', 'events', 'opportunities', 'clubs', 'sponsors', 'resources', 'chat']
 
-const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events', 'opportunities', 'clubs', 'sponsors'])
+const VALID_TABS = new Set<Tab>(['videos', 'dine', 'giving', 'members', 'board', 'chat', 'events', 'opportunities', 'clubs', 'sponsors', 'resources'])
 
 function parseDeepLink(): { tab: Tab; id?: string } {
   try {
@@ -112,6 +114,7 @@ export default function App() {
         {tab === 'opportunities' && <OpportunitiesModule />}
         {tab === 'clubs'         && <ClubsModule />}
         {tab === 'sponsors'      && <SponsorsModule />}
+        {tab === 'resources'     && <TrustedResourcesModule />}
       </main>
 
       {/* Floating chat bubble */}
