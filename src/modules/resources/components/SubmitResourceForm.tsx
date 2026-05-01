@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 import { db } from '../../../lib/firebase'
-import { CATEGORY_CONFIG, type ResourceCategory } from '../TrustedResourcesModule'
+import { CATEGORY_CONFIG, type ResourceCategory } from '../resourceTypes'
 
 interface ExtractedResource {
   name?: string
