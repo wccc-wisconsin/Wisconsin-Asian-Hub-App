@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, doc, setDoc, updateDoc, deleteDoc, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
-import { CATEGORY_CONFIG, BADGE_CONFIG, type TrustedResource, type ResourceCategory } from '../../modules/resources/TrustedResourcesModule'
+import { CATEGORY_CONFIG, BADGE_CONFIG, type TrustedResource, type ResourceCategory } from '../../modules/resources/resourceTypes'
 
 const CATEGORIES = Object.keys(CATEGORY_CONFIG) as ResourceCategory[]
 const BADGES = [
