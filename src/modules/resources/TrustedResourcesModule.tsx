@@ -435,24 +435,6 @@ export default function TrustedResourcesModule() {
           <ResourceCard key={r.id} resource={r} onOpen={() => setSelected(r)} />
         ))}
 
-        {/* Submit CTA */}
-        {!loading && (
-          <div className="rounded-2xl p-5 space-y-3 text-center"
-            style={{ background: 'rgba(185,28,28,0.04)', border: '2px dashed rgba(185,28,28,0.2)' }}>
-            <p className="text-3xl">🤝</p>
-            <h3 className="font-semibold text-sm" style={{ color: 'var(--color-text)' }}>
-              Want to be listed as a Trusted Resource?
-            </h3>
-            <p className="text-xs leading-relaxed" style={{ color: 'var(--color-muted)' }}>
-              WCCC members and partners can apply to be featured in our Trusted Resource directory.
-            </p>
-            <a href="mailto:info@wisccc.org?subject=Trusted Resource Listing"
-              className="inline-block px-4 py-2 rounded-xl text-xs font-semibold"
-              style={{ background: 'var(--color-red)', color: '#fff' }}>
-              Apply to be Listed →
-            </a>
-          </div>
-        )}
       </div>
     </div>
   )
