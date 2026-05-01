@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
+import SubmitResourceForm from './components/SubmitResourceForm'
 import { collection, onSnapshot, query } from 'firebase/firestore'
 import { db } from '../../lib/firebase'
 
@@ -345,6 +346,7 @@ function ResourceCard({ resource, onOpen }: { resource: TrustedResource; onOpen:
 
 export default function TrustedResourcesModule() {
   const [resources, setResources]       = useState<TrustedResource[]>([])
+  const [submitting, setSubmitting]       = useState(false)
   const [loading, setLoading]           = useState(true)
   const [categoryFilter, setCategory]   = useState<ResourceCategory | 'all'>('all')
   const [selectedResource, setSelected] = useState<TrustedResource | null>(null)
@@ -387,6 +389,8 @@ export default function TrustedResourcesModule() {
     return Object.keys(CATEGORY_CONFIG).filter(c => cats.has(c as ResourceCategory)) as ResourceCategory[]
   }, [resources])
 
+  if (submitting) return <SubmitResourceForm onClose={() => setSubmitting(false)} />
+
   if (selectedResource) {
     return <ResourceDetailPage resource={selectedResource} onBack={() => setSelected(null)} />
   }
@@ -401,6 +405,15 @@ export default function TrustedResourcesModule() {
         <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
           WCCC-vetted partners and professionals for our members
         </p>
+      </div>
+
+      {/* Apply CTA */}
+      <div className="px-4 mb-3">
+        <button onClick={() => setSubmitting(true)}
+          className="w-full py-3 rounded-xl text-sm font-semibold flex items-center justify-center gap-2"
+          style={{ background: 'rgba(185,28,28,0.08)', color: 'var(--color-red)', border: '1px solid rgba(185,28,28,0.2)' }}>
+          ⭐ Apply to be a Trusted Resource
+        </button>
       </div>
 
       {/* Search */}
