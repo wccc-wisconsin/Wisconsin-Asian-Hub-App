@@ -18,7 +18,7 @@ const TAB_META: Record<Tab, { icon: string; label: string }> = {
   videos:        { icon: '🎬', label: 'Videos'        },
   dine:          { icon: '🍜', label: 'Dine'          },
   giving:        { icon: '🤝', label: 'Giving'        },
-  members:       { icon: '👥', label: 'Members'       },
+  members:       { icon: '👥', label: 'Asian Businesses'       },
   board:         { icon: '📋', label: 'Board'         },
   chat:          { icon: '🤖', label: 'Chat'          },
   events:        { icon: '📅', label: 'Events'        },
