@@ -45,15 +45,8 @@ function isFoodBusiness(member: any): boolean {
 }
 
 function memberToRestaurant(member: any): Restaurant {
-  // Map cuisine from category field
-  const categoryLower = (member.category ?? '').toLowerCase()
-  let cuisine: Cuisine = 'Asian Fusion'
-  if (categoryLower.includes('chinese'))    cuisine = 'Chinese'
-  else if (categoryLower.includes('vietnamese')) cuisine = 'Vietnamese'
-  else if (categoryLower.includes('japanese') || categoryLower.includes('sushi')) cuisine = 'Japanese'
-  else if (categoryLower.includes('korean')) cuisine = 'Korean'
-  else if (categoryLower.includes('thai'))  cuisine = 'Thai'
-  else if (categoryLower.includes('filipino')) cuisine = 'Filipino'
+  // Use cuisine field directly from members collection
+  const cuisine: Cuisine = (member.cuisine as Cuisine) ?? 'Asian Fusion'
 
   return {
     id:          member.id,
