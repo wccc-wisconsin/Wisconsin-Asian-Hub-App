@@ -30,18 +30,18 @@ export interface Restaurant {
   createdAt: Timestamp | null
 }
 
-// Only match on category field — must contain food/restaurant keywords
-const FOOD_CATEGORY_KEYWORDS = [
-  'restaurant', 'dim sum', 'sushi', 'pho', 'ramen', 'bistro',
-  'eatery', 'dining', 'food service', 'food & beverage',
-  'catering', 'bakery', 'cafe', 'coffee shop', 'bubble tea',
-  'chinese food', 'vietnamese food', 'japanese food', 'korean food',
-  'thai food', 'filipino food', 'asian food',
-]
+// Only show members with a recognized cuisine value
+const VALID_CUISINES = new Set([
+  'Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai',
+  'Filipino', 'Asian Fusion', 'Taiwanese', 'Cantonese',
+  'Szechuan', 'Dim Sum', 'Malaysian', 'Indonesian',
+  'Singaporean', 'Hawaiian', 'Indian', 'Mediterranean',
+  'American', 'Italian', 'Mexican', 'BBQ', 'Seafood',
+  'Vegetarian', 'Vegan', 'Bubble Tea', 'Cafe', 'Bakery', 'Dessert',
+])
 
 function isFoodBusiness(member: any): boolean {
-  const category = (member.category ?? '').toLowerCase()
-  return FOOD_CATEGORY_KEYWORDS.some(k => category.includes(k))
+  return VALID_CUISINES.has(member.cuisine)
 }
 
 function memberToRestaurant(member: any): Restaurant {
