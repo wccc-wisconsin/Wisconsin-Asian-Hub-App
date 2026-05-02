@@ -19,6 +19,7 @@ export interface Member {
   placeId?: string
   wccc?: boolean
   enriched?: boolean
+  cuisine?: string
 }
 
 export function useMembers() {
