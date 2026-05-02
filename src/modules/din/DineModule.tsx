@@ -5,10 +5,15 @@ import RestaurantCard from './components/RestaurantCard'
 import SubmitRestaurantForm from './components/SubmitRestaurantForm'
 import ShareCard from './components/ShareCard'
 
-const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
 const CUISINE_ICONS: Record<string, string> = {
   'Chinese': '🥢', 'Vietnamese': '🍜', 'Japanese': '🍱',
   'Korean': '🥘', 'Thai': '🌶️', 'Filipino': '🍚', 'Asian Fusion': '🍽️',
+  'American': '🍔', 'Italian': '🍝', 'Mexican': '🌮', 'Indian': '🍛',
+  'Mediterranean': '🫒', 'Hawaiian': '🌺', 'Taiwanese': '🧋',
+  'Singaporean': '🦀', 'Malaysian': '🍜', 'Indonesian': '🍚',
+  'Cantonese': '🥢', 'Szechuan': '🌶️', 'Dim Sum': '🥟', 'BBQ': '🔥',
+  'Seafood': '🦞', 'Vegetarian': '🥗', 'Vegan': '🌱', 'Bakery': '🥐',
+  'Cafe': '☕', 'Bubble Tea': '🧋', 'Dessert': '🧁', 'Catering': '🍽️',
 }
 
 function SkeletonCard() {
@@ -198,6 +203,13 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
     }
   }, [deepLinkId, restaurants])
 
+  // Derive unique cuisines from actual data
+  const availableCuisines = useMemo(() => {
+    const seen = new Set<string>()
+    restaurants.forEach(r => { if (r.cuisine) seen.add(r.cuisine) })
+    return [...seen].sort()
+  }, [restaurants])
+
   const featured = restaurants.find(r => r.featured)
 
   const filtered = useMemo(() => {
@@ -295,7 +307,7 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
             }}>
             All Cuisines
           </button>
-          {CUISINES.map(c => (
+          {availableCuisines.map(c => (
             <button key={c} onClick={() => setCuisine(c)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
               style={{
