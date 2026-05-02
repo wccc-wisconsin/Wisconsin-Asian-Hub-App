@@ -5,7 +5,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 
-export type Cuisine = 'Chinese' | 'Vietnamese' | 'Japanese' | 'Korean' | 'Thai' | 'Filipino' | 'Asian Fusion'
+export type Cuisine = string
 export type Affiliation = 'wccc' | 'community'
 export type RestaurantStatus = 'pending' | 'approved' | 'rejected'
 
