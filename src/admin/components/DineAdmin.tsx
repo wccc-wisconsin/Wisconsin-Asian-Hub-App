@@ -1,34 +1,7 @@
 import { useState } from 'react'
-import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeeklyDeal, submitRestaurant, type Restaurant, type Cuisine } from '../../hooks/useDine'
+import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeeklyDeal, type Restaurant, type Cuisine } from '../../hooks/useDine'
 
 const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
-
-function AddWDAForm({ onClose }: { onClose: () => void }) {
-  const [name, setName]       = useState('')
-  const [city, setCity]       = useState('')
-  const [cuisine, setCuisine] = useState<Cuisine>('Chinese')
-  const [address, setAddress] = useState('')
-  const [phone, setPhone]     = useState('')
-  const [website, setWebsite] = useState('')
-  const [desc, setDesc]       = useState('')
-  const [saving, setSaving]   = useState(false)
-
-  const isValid = name.trim() && city.trim() && address.trim() && phone.trim()
-
-  async function handleAdd() {
-    if (!isValid) return
-    setSaving(true)
-    try {
-      await submitRestaurant({
-        name: name.trim(), city: city.trim(), cuisine, address: address.trim(),
-        phone: phone.trim(), website: website.trim(), description: desc.trim(),
-        affiliation: 'wda',
-      })
-      onClose()
-    } finally {
-      setSaving(false)
-    }
-  }
 
   const inputStyle = {
     background: 'var(--color-bg)',
@@ -86,14 +59,14 @@ function RestaurantRow({ r }: { r: Restaurant }) {
   return (
     <div className="rounded-xl p-4 space-y-3" style={{
       background: 'var(--color-surface)',
-      border: `1px solid ${r.affiliation === 'wccc' ? 'rgba(185,28,28,0.2)' : 'rgba(251,191,36,0.2)'}`,
+      border: '1px solid var(--color-border)',
     }}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: r.affiliation === 'wccc' ? 'rgba(185,28,28,0.15)' : 'rgba(251,191,36,0.15)', color: r.affiliation === 'wccc' ? '#ef4444' : '#d97706' }}>
-              {(r.affiliation ?? 'wccc').toUpperCase()}
+              style={{ background: 'rgba(185,28,28,0.15)', color: '#ef4444' }}>
+              {r.affiliation === 'wccc' ? 'WCCC Member' : 'Community'}
             </span>
             {r.featured && (
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
@@ -170,8 +143,6 @@ function RestaurantRow({ r }: { r: Restaurant }) {
 
 export default function DineAdmin() {
   const { restaurants, loading } = useAllRestaurants()
-  const [showAddWDA, setShowAddWDA] = useState(false)
-
   const pending  = restaurants.filter(r => r.status === 'pending')
   const approved = restaurants.filter(r => r.status === 'approved')
 
@@ -191,16 +162,7 @@ export default function DineAdmin() {
         ))}
       </div>
 
-      {showAddWDA
-        ? <AddWDAForm onClose={() => setShowAddWDA(false)} />
-        : (
-          <button onClick={() => setShowAddWDA(true)}
-            className="w-full py-2.5 rounded-xl text-sm font-medium"
-            style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(251,191,36,0.2)' }}>
-            + Add Wisconsin Dinner Association Restaurant
-          </button>
-        )
-      }
+
 
       {loading && <p className="text-sm text-center" style={{ color: 'var(--color-muted)' }}>Loading...</p>}
 
