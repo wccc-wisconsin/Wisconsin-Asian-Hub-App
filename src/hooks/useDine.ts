@@ -30,18 +30,67 @@ export interface Restaurant {
   createdAt: Timestamp | null
 }
 
+// Cuisine keywords to match against members collection category field
+const CUISINE_KEYWORDS = [
+  'restaurant', 'chinese', 'vietnamese', 'japanese', 'korean', 'thai',
+  'filipino', 'asian', 'fusion', 'dim sum', 'sushi', 'pho', 'ramen',
+  'food', 'dining', 'catering', 'bistro', 'cafe', 'kitchen', 'eatery',
+]
+
+function isFoodBusiness(member: any): boolean {
+  const text = `${member.category ?? ''} ${member.name ?? ''}`.toLowerCase()
+  return CUISINE_KEYWORDS.some(k => text.includes(k))
+}
+
+function memberToRestaurant(member: any): Restaurant {
+  // Map cuisine from category field
+  const categoryLower = (member.category ?? '').toLowerCase()
+  let cuisine: Cuisine = 'Asian Fusion'
+  if (categoryLower.includes('chinese'))    cuisine = 'Chinese'
+  else if (categoryLower.includes('vietnamese')) cuisine = 'Vietnamese'
+  else if (categoryLower.includes('japanese') || categoryLower.includes('sushi')) cuisine = 'Japanese'
+  else if (categoryLower.includes('korean')) cuisine = 'Korean'
+  else if (categoryLower.includes('thai'))  cuisine = 'Thai'
+  else if (categoryLower.includes('filipino')) cuisine = 'Filipino'
+
+  return {
+    id:          member.id,
+    name:        member.name ?? '',
+    cuisine,
+    city:        member.city ?? '',
+    address:     member.address ?? '',
+    phone:       member.phone ?? '',
+    website:     member.googleWebsite || member.website || '',
+    description: member.description ?? '',
+    photoUrl:    '',  // photos disabled to avoid API costs
+    affiliation: member.wccc ? 'wccc' : 'wda',
+    status:      'approved',
+    featured:    member.featured ?? false,
+    weeklyDeal:  member.weeklyDeal,
+    rating:      member.rating ?? undefined,
+    createdAt:   member.createdAt ?? null,
+  }
+}
+
 export function useRestaurants() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([])
   const [loading, setLoading]         = useState(true)
 
   useEffect(() => {
-    const q = query(
-      collection(db, 'restaurants'),
-      where('status', '==', 'approved'),
-      orderBy('createdAt', 'desc')
-    )
+    // Read from members collection — filter food businesses in JS
+    const q = query(collection(db, 'members'))
     const unsub = onSnapshot(q, snap => {
-      setRestaurants(snap.docs.map(d => ({ id: d.id, ...d.data() } as Restaurant)))
+      const all = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(isFoodBusiness)
+        .map(memberToRestaurant)
+        .sort((a, b) => {
+          // WCCC members first, then alphabetical
+          if (a.affiliation === 'wccc' && b.affiliation !== 'wccc') return -1
+          if (a.affiliation !== 'wccc' && b.affiliation === 'wccc') return 1
+          return a.name.localeCompare(b.name)
+        })
+      setRestaurants(all)
       setLoading(false)
     })
     return unsub
