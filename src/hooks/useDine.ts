@@ -104,9 +104,12 @@ export function useAllRestaurants() {
   const [loading, setLoading]         = useState(true)
 
   useEffect(() => {
-    const q = query(collection(db, 'restaurants'), orderBy('createdAt', 'desc'))
+    const q = query(collection(db, 'restaurants'))
     const unsub = onSnapshot(q, snap => {
-      setRestaurants(snap.docs.map(d => ({ id: d.id, ...d.data() } as Restaurant)))
+      const all = snap.docs
+        .map(d => ({ id: d.id, ...d.data() } as Restaurant))
+        .sort((a, b) => (b.createdAt?.seconds ?? 0) - (a.createdAt?.seconds ?? 0))
+      setRestaurants(all)
       setLoading(false)
     })
     return unsub
