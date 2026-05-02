@@ -6,7 +6,7 @@ import {
 import { db } from '../lib/firebase'
 
 export type Cuisine = 'Chinese' | 'Vietnamese' | 'Japanese' | 'Korean' | 'Thai' | 'Filipino' | 'Asian Fusion'
-export type Affiliation = 'wccc' | 'wda'
+export type Affiliation = 'wccc' | 'community'
 export type RestaurantStatus = 'pending' | 'approved' | 'rejected'
 
 export interface Restaurant {
@@ -58,7 +58,7 @@ function memberToRestaurant(member: any): Restaurant {
     website:     member.googleWebsite || member.website || '',
     description: member.description ?? '',
     photoUrl:    '',  // photos disabled to avoid API costs
-    affiliation: member.wccc ? 'wccc' : 'wda',
+    affiliation: (member.wccc === true || member.wccc === 'true' || member.wccc === 1 || member.wccc === 'yes') ? 'wccc' : 'community',
     status:      'approved',
     featured:    member.featured ?? false,
     weeklyDeal:  member.weeklyDeal,
