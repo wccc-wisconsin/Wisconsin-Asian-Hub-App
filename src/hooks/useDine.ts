@@ -37,7 +37,7 @@ const VALID_CUISINES = new Set([
   'Szechuan', 'Dim Sum', 'Malaysian', 'Indonesian',
   'Singaporean', 'Hawaiian', 'Indian', 'Mediterranean',
   'American', 'Italian', 'Mexican', 'BBQ', 'Seafood',
-  'Vegetarian', 'Vegan', 'Bubble Tea', 'Cafe', 'Bakery', 'Dessert',
+  'Vegetarian', 'Vegan', 'Bubble Tea', 'Dessert', 'Other',
 ])
 
 function isFoodBusiness(member: any): boolean {
@@ -46,7 +46,8 @@ function isFoodBusiness(member: any): boolean {
 
 function memberToRestaurant(member: any): Restaurant {
   // Use cuisine field directly from members collection
-  const cuisine: Cuisine = (member.cuisine as Cuisine) ?? 'Asian Fusion'
+  const rawCuisine = member.cuisine as string ?? 'Other'
+  const cuisine: Cuisine = ['Cafe', 'Bakery', 'American', 'Italian'].includes(rawCuisine) ? 'Other' : rawCuisine
 
   return {
     id:          member.id,
