@@ -207,7 +207,9 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
   const availableCuisines = useMemo(() => {
     const seen = new Set<string>()
     restaurants.forEach(r => { if (r.cuisine) seen.add(r.cuisine) })
-    return [...seen].sort()
+    const sorted = [...seen].filter(c => c !== 'Other').sort()
+    if (seen.has('Other')) sorted.push('Other')
+    return sorted
   }, [restaurants])
 
   const featured = restaurants.find(r => r.featured)
