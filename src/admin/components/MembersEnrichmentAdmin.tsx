@@ -71,6 +71,7 @@ function MemberRow({ member }: { member: Member }) {
   const [name, setName]         = useState(member.name)
   const [city, setCity]         = useState(member.city)
   const [category, setCategory] = useState(member.category ?? '')
+  const [cuisine, setCuisine]   = useState((member as any).cuisine ?? '')
   const [saving, setSaving]     = useState(false)
 
   const isPending = (member as any).status === 'pending'
@@ -78,7 +79,7 @@ function MemberRow({ member }: { member: Member }) {
   async function handleSave() {
     setSaving(true)
     const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore')
-    await updateDoc(firestoreDoc(db, 'members', member.id), { name, city, category })
+    await updateDoc(firestoreDoc(db, 'members', member.id), { name, city, category, cuisine })
     setMsg('✅ Saved')
     setEditing(false)
     setSaving(false)
@@ -109,7 +110,7 @@ function MemberRow({ member }: { member: Member }) {
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold truncate" style={{ color: 'var(--color-text)' }}>{member.name}</p>
           <p className="text-xs" style={{ color: 'var(--color-muted)' }}>
-            {member.city}, WI · {member.category}
+            {member.city}, WI · {member.category}{(member as any).cuisine ? ` · 🍜 ${(member as any).cuisine}` : ''}
             {member.rating ? ` · ⭐ ${member.rating.toFixed(1)}` : ''}
           </p>
         </div>
@@ -135,6 +136,7 @@ function MemberRow({ member }: { member: Member }) {
           <input value={name} onChange={e => setName(e.target.value)} placeholder="Business name" style={inp} />
           <input value={city} onChange={e => setCity(e.target.value)} placeholder="City" style={inp} />
           <input value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" style={inp} />
+          <input value={cuisine} onChange={e => setCuisine(e.target.value)} placeholder="Cuisine (e.g. Chinese, Vietnamese, Thai)" style={inp} />
           <button onClick={handleSave} disabled={saving}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40"
             style={{ background: 'var(--color-red)', color: '#fff' }}>
