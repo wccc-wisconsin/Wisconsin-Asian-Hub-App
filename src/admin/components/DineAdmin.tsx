@@ -1,7 +1,6 @@
 import { useState } from 'react'
-import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeeklyDeal, type Restaurant, type Cuisine } from '../../hooks/useDine'
+import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeeklyDeal, type Restaurant } from '../../hooks/useDine'
 
-const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
 
 function RestaurantRow({ r }: { r: Restaurant }) {
   const [deal, setDeal]           = useState(r.weeklyDeal ?? '')
