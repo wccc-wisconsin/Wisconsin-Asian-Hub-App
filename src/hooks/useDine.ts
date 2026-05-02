@@ -47,7 +47,14 @@ function isFoodBusiness(member: any): boolean {
 function memberToRestaurant(member: any): Restaurant {
   // Use cuisine field directly from members collection
   const rawCuisine = member.cuisine as string ?? 'Other'
-  const cuisine: Cuisine = ['Cafe', 'Bakery', 'American', 'Italian'].includes(rawCuisine) ? 'Other' : rawCuisine
+  const ASIAN_CUISINES = new Set([
+    'Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai',
+    'Filipino', 'Asian Fusion', 'Taiwanese', 'Cantonese',
+    'Szechuan', 'Dim Sum', 'Malaysian', 'Indonesian',
+    'Singaporean', 'Hawaiian', 'Indian', 'Bubble Tea', 'Dessert',
+    'Vegetarian', 'Vegan', 'BBQ', 'Seafood', 'Other',
+  ])
+  const cuisine: Cuisine = ASIAN_CUISINES.has(rawCuisine) ? rawCuisine : 'Other'
 
   return {
     id:          member.id,
