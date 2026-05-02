@@ -86,10 +86,7 @@ function RestaurantDetail({ restaurant, onClose }: { restaurant: Restaurant; onC
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: 'rgba(185,28,28,0.15)', color: '#ef4444' }}>WCCC Member</span>
           )}
-          {restaurant.affiliation === 'wda' && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(251,191,36,0.15)', color: '#d97706' }}>WDA Partner</span>
-          )}
+
           {restaurant.featured && (
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: 'rgba(124,58,237,0.15)', color: '#7c3aed' }}>⭐ Featured</span>
@@ -187,7 +184,7 @@ interface DineModuleProps {
 export default function DineModule({ deepLinkId }: DineModuleProps) {
   const { restaurants, loading }         = useRestaurants()
   const [cuisine, setCuisine]            = useState<Cuisine | 'all'>('all')
-  const [affiliation, setAffiliation]    = useState<'all' | 'wccc' | 'wda'>('all')
+  const [affiliation, setAffiliation]    = useState<'all' | 'wccc'>('all')
   const [submitting, setSubmitting]      = useState(false)
   const [sharing, setSharing]            = useState<Restaurant | null>(null)
   const [detail, setDetail]              = useState<Restaurant | null>(null)
@@ -200,10 +197,10 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
     }
   }, [deepLinkId, restaurants])
 
-  const featured = restaurants.find(r => r.featured && r.affiliation === 'wccc')
+  const featured = restaurants.find(r => r.featured)
 
   const filtered = useMemo(() => restaurants.filter(r => {
-    if (r.featured && r.affiliation === 'wccc') return false
+    if (r.featured) return false
     if (cuisine !== 'all' && r.cuisine !== cuisine) return false
     if (affiliation !== 'all' && r.affiliation !== affiliation) return false
     return true
@@ -225,26 +222,8 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
       {sharing    && <ShareCard restaurant={sharing} onClose={() => setSharing(null)} />}
       {detail     && <RestaurantDetail restaurant={detail} onClose={closeDetail} />}
 
-      {/* Partnership header */}
+      {/* Header */}
       <div className="px-4 pt-5 pb-3 text-center">
-        <div className="flex items-center justify-center gap-3 mb-3">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{
-            background: 'rgba(185,28,28,0.12)', border: '1px solid rgba(185,28,28,0.3)'
-          }}>
-            <div className="w-5 h-5 rounded-sm flex items-center justify-center text-xs font-bold text-white"
-              style={{ background: 'var(--color-red)' }}>亚</div>
-            <span className="text-xs font-semibold" style={{ color: 'var(--color-red)' }}>WCCC</span>
-          </div>
-          <span className="text-sm" style={{ color: 'var(--color-muted)' }}>×</span>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{
-            background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.3)'
-          }}>
-            <span className="text-sm">🍽️</span>
-            <span className="text-xs font-semibold" style={{ color: 'var(--color-gold)' }}>
-              Wisconsin Dinner Association
-            </span>
-          </div>
-        </div>
         <h1 className="font-display text-xl font-bold" style={{ color: 'var(--color-text)' }}>
           Dine Asian Wisconsin
         </h1>
@@ -276,8 +255,8 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
         borderBottom: '1px solid var(--color-border)'
       }}>
         <div className="flex gap-2 mb-2">
-          {([['all', '🗂 All'], ['wccc', '🔴 WCCC'], ['wda', '🟡 WDA']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setAffiliation(val)}
+          {([['all', '🗂 All'], ['wccc', '🔴 WCCC Members']] as const).map(([val, label]) => (
+            <button key={val} onClick={() => setAffiliation(val as 'all' | 'wccc')}
               className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
               style={{
                 background: affiliation === val ? 'var(--color-red)' : 'var(--color-surface)',
