@@ -3,55 +3,6 @@ import { useAllRestaurants, updateRestaurantStatus, toggleFeatured, updateWeekly
 
 const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
 
-  const inputStyle = {
-    background: 'var(--color-bg)',
-    border: '1px solid var(--color-border)',
-    color: 'var(--color-text)',
-  }
-
-  return (
-    <div className="rounded-xl p-4 space-y-3" style={{ background: 'var(--color-surface)', border: '1px solid rgba(251,191,36,0.2)' }}>
-      <p className="text-sm font-semibold" style={{ color: 'var(--color-gold)' }}>+ Add WDA Restaurant</p>
-      <div className="flex gap-2 flex-wrap">
-        {CUISINES.map(c => (
-          <button key={c} onClick={() => setCuisine(c)}
-            className="px-3 py-1 rounded-full text-xs font-medium"
-            style={{
-              background: cuisine === c ? 'rgba(251,191,36,0.15)' : 'var(--color-bg)',
-              border: `1px solid ${cuisine === c ? 'rgba(251,191,36,0.4)' : 'var(--color-border)'}`,
-              color: cuisine === c ? 'var(--color-gold)' : 'var(--color-muted)',
-            }}>
-            {c}
-          </button>
-        ))}
-      </div>
-      {[
-        { p: 'Restaurant name *', v: name, s: setName },
-        { p: 'City *', v: city, s: setCity },
-        { p: 'Address *', v: address, s: setAddress },
-        { p: 'Phone *', v: phone, s: setPhone },
-        { p: 'Website', v: website, s: setWebsite },
-        { p: 'Description', v: desc, s: setDesc },
-      ].map(({ p, v, s }) => (
-        <input key={p} type="text" placeholder={p} value={v} onChange={e => s(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg text-sm outline-none" style={inputStyle} />
-      ))}
-      <div className="flex gap-2">
-        <button onClick={handleAdd} disabled={!isValid || saving}
-          className="flex-1 py-2 rounded-lg text-sm font-semibold disabled:opacity-40"
-          style={{ background: 'var(--color-gold)', color: '#000' }}>
-          {saving ? '...' : 'Add WDA Restaurant'}
-        </button>
-        <button onClick={onClose}
-          className="px-4 py-2 rounded-lg text-sm"
-          style={{ background: 'var(--color-bg)', color: 'var(--color-muted)', border: '1px solid var(--color-border)' }}>
-          Cancel
-        </button>
-      </div>
-    </div>
-  )
-}
-
 function RestaurantRow({ r }: { r: Restaurant }) {
   const [deal, setDeal]           = useState(r.weeklyDeal ?? '')
   const [editingDeal, setEditing] = useState(false)
@@ -143,6 +94,7 @@ function RestaurantRow({ r }: { r: Restaurant }) {
 
 export default function DineAdmin() {
   const { restaurants, loading } = useAllRestaurants()
+
   const pending  = restaurants.filter(r => r.status === 'pending')
   const approved = restaurants.filter(r => r.status === 'approved')
 
@@ -161,8 +113,6 @@ export default function DineAdmin() {
           </div>
         ))}
       </div>
-
-
 
       {loading && <p className="text-sm text-center" style={{ color: 'var(--color-muted)' }}>Loading...</p>}
 
