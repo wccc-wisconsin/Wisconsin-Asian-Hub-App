@@ -30,16 +30,18 @@ export interface Restaurant {
   createdAt: Timestamp | null
 }
 
-// Cuisine keywords to match against members collection category field
-const CUISINE_KEYWORDS = [
-  'restaurant', 'chinese', 'vietnamese', 'japanese', 'korean', 'thai',
-  'filipino', 'asian', 'fusion', 'dim sum', 'sushi', 'pho', 'ramen',
-  'food', 'dining', 'catering', 'bistro', 'cafe', 'kitchen', 'eatery',
+// Only match on category field — must contain food/restaurant keywords
+const FOOD_CATEGORY_KEYWORDS = [
+  'restaurant', 'dim sum', 'sushi', 'pho', 'ramen', 'bistro',
+  'eatery', 'dining', 'food service', 'food & beverage',
+  'catering', 'bakery', 'cafe', 'coffee shop', 'bubble tea',
+  'chinese food', 'vietnamese food', 'japanese food', 'korean food',
+  'thai food', 'filipino food', 'asian food',
 ]
 
 function isFoodBusiness(member: any): boolean {
-  const text = `${member.category ?? ''} ${member.name ?? ''}`.toLowerCase()
-  return CUISINE_KEYWORDS.some(k => text.includes(k))
+  const category = (member.category ?? '').toLowerCase()
+  return FOOD_CATEGORY_KEYWORDS.some(k => category.includes(k))
 }
 
 function memberToRestaurant(member: any): Restaurant {
