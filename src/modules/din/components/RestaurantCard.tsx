@@ -56,12 +56,7 @@ export default function RestaurantCard({ restaurant, onOpen }: RestaurantCardPro
               WCCC Member
             </span>
           )}
-          {restaurant.affiliation === 'wda' && (
-            <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: 'rgba(251,191,36,0.15)', color: '#d97706' }}>
-              WDA Partner
-            </span>
-          )}
+
           {restaurant.featured && (
             <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
               style={{ background: 'rgba(124,58,237,0.15)', color: '#7c3aed' }}>
