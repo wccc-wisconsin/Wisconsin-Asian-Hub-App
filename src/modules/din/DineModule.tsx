@@ -186,6 +186,7 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
   const [cuisine, setCuisine]            = useState<Cuisine | 'all'>('all')
   const [affiliation, setAffiliation]    = useState<'all' | 'wccc'>('all')
   const [submitting, setSubmitting]      = useState(false)
+  const [search, setSearch]              = useState('')
   const [sharing, setSharing]            = useState<Restaurant | null>(null)
   const [detail, setDetail]              = useState<Restaurant | null>(null)
 
@@ -199,12 +200,16 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
 
   const featured = restaurants.find(r => r.featured)
 
-  const filtered = useMemo(() => restaurants.filter(r => {
-    if (r.featured) return false
-    if (cuisine !== 'all' && r.cuisine !== cuisine) return false
-    if (affiliation !== 'all' && r.affiliation !== affiliation) return false
-    return true
-  }), [restaurants, cuisine, affiliation])
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase()
+    return restaurants.filter(r => {
+      if (r.featured) return false
+      if (cuisine !== 'all' && r.cuisine !== cuisine) return false
+      if (affiliation !== 'all' && r.affiliation !== affiliation) return false
+      if (q && !`${r.name} ${r.city} ${r.cuisine} ${r.description ?? ''}`.toLowerCase().includes(q)) return false
+      return true
+    })
+  }, [restaurants, cuisine, affiliation, search])
 
   function openDetail(r: Restaurant) {
     setDetail(r)
@@ -254,6 +259,18 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
         background: 'var(--color-bg)', backdropFilter: 'blur(12px)',
         borderBottom: '1px solid var(--color-border)'
       }}>
+        <div className="relative mb-2">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style={{ color: 'var(--color-muted)' }}>🔍</span>
+          <input type="text" placeholder="Search restaurants..."
+            value={search} onChange={e => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 rounded-xl text-sm outline-none"
+            style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', color: 'var(--color-text)', fontSize: '16px' }} />
+          {search && (
+            <button onClick={() => setSearch('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-xs"
+              style={{ color: 'var(--color-muted)' }}>✕</button>
+          )}
+        </div>
         <div className="flex gap-2 mb-2">
           {([['all', '🗂 All'], ['wccc', '🔴 WCCC Members']] as const).map(([val, label]) => (
             <button key={val} onClick={() => setAffiliation(val as 'all' | 'wccc')}
