@@ -41,7 +41,7 @@ const VALID_CUISINES = new Set([
 ])
 
 function isFoodBusiness(member: any): boolean {
-  return VALID_CUISINES.has(member.cuisine)
+  return member.category === 'Restaurant'
 }
 
 function memberToRestaurant(member: any): Restaurant {
