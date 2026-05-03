@@ -77,7 +77,7 @@ export function useRestaurants() {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .filter(isFoodBusiness)
-        .filter(m => m.status !== 'pending')
+        .filter(m => (m as any).status !== 'pending')
         .map(memberToRestaurant)
         .sort((a, b) => {
           // WCCC members first, then alphabetical
