@@ -30,15 +30,6 @@ export interface Restaurant {
   createdAt: Timestamp | null
 }
 
-// Only show members with a recognized cuisine value
-const VALID_CUISINES = new Set([
-  'Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai',
-  'Filipino', 'Asian Fusion', 'Taiwanese', 'Cantonese',
-  'Szechuan', 'Dim Sum', 'Malaysian', 'Indonesian',
-  'Singaporean', 'Hawaiian', 'Indian', 'Mediterranean',
-  'American', 'Italian', 'Mexican', 'BBQ', 'Seafood',
-  'Vegetarian', 'Vegan', 'Bubble Tea', 'Dessert', 'Other',
-])
 
 function isFoodBusiness(member: any): boolean {
   return member.category === 'Restaurant'
