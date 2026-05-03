@@ -58,7 +58,7 @@ function memberToRestaurant(member: any): Restaurant {
     description: member.description ?? '',
     photoUrl:    '',  // photos disabled to avoid API costs
     affiliation: (member.wccc === true || member.wccc === 'true' || member.wccc === 1 || member.wccc === 'yes') ? 'wccc' : 'community',
-    status:      'approved',
+    status:      member.status === 'pending' ? 'pending' : 'approved',
     featured:    member.featured ?? false,
     weeklyDeal:  member.weeklyDeal,
     rating:      member.rating ?? undefined,
@@ -77,6 +77,7 @@ export function useRestaurants() {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() }))
         .filter(isFoodBusiness)
+        .filter(m => m.status !== 'pending')
         .map(memberToRestaurant)
         .sort((a, b) => {
           // WCCC members first, then alphabetical
