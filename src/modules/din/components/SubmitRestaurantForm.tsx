@@ -1,10 +1,19 @@
 import { useState } from 'react'
-import { submitRestaurant, type Cuisine } from '../../../hooks/useDine'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { db } from '../../../lib/firebase'
+import type { Cuisine } from '../../../hooks/useDine'
 
-const CUISINES: Cuisine[] = ['Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion']
+const CUISINES: Cuisine[] = [
+  'Chinese', 'Vietnamese', 'Japanese', 'Korean', 'Thai', 'Filipino', 'Asian Fusion',
+  'Taiwanese', 'Cantonese', 'Szechuan', 'Dim Sum', 'Malaysian', 'Indonesian',
+  'Singaporean', 'Hawaiian', 'Indian', 'Bubble Tea', 'Dessert', 'BBQ', 'Seafood',
+]
 const CUISINE_ICONS: Record<string, string> = {
   'Chinese': '🥢', 'Vietnamese': '🍜', 'Japanese': '🍱',
   'Korean': '🥘', 'Thai': '🌶️', 'Filipino': '🍚', 'Asian Fusion': '🍽️',
+  'Taiwanese': '🧋', 'Cantonese': '🥢', 'Szechuan': '🌶️', 'Dim Sum': '🥟',
+  'Malaysian': '🍜', 'Indonesian': '🍚', 'Singaporean': '🦀', 'Hawaiian': '🌺',
+  'Indian': '🍛', 'Bubble Tea': '🧋', 'Dessert': '🧁', 'BBQ': '🔥', 'Seafood': '🦞',
 }
 
 interface ExtractedRestaurant {
@@ -128,10 +137,20 @@ Return ONLY valid JSON, nothing else.`
     setSubmitting(true)
     setError('')
     try {
-      await submitRestaurant({
-        name, cuisine: cuisine as Cuisine, city, address, phone,
-        website, description, photoUrl, hours,
-        affiliation: 'wccc', submittedBy,
+      await addDoc(collection(db, 'members'), {
+        name,
+        cuisine,
+        city,
+        address,
+        phone,
+        website:     website || '',
+        description: description || '',
+        hours:       hours || '',
+        category:    'Restaurant',
+        wccc:        false,
+        status:      'pending',
+        submittedBy,
+        createdAt:   serverTimestamp(),
       })
       setPhase('done')
     } catch {
@@ -363,12 +382,7 @@ Return ONLY valid JSON, nothing else.`
         )}
       </div>
 
-      <style>{`
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0) }
-          30% { transform: translateY(-6px) }
-        }
-      `}</style>
+
     </div>
   )
 }
