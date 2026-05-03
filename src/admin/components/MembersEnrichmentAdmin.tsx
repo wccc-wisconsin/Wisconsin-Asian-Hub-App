@@ -72,6 +72,7 @@ function MemberRow({ member }: { member: Member }) {
   const [city, setCity]         = useState(member.city)
   const [category, setCategory] = useState(member.category ?? '')
   const [cuisine, setCuisine]   = useState((member as any).cuisine ?? '')
+  const [wccc, setWccc]         = useState(member.wccc ?? false)
   const [saving, setSaving]     = useState(false)
 
   const isPending = (member as any).status === 'pending'
@@ -79,7 +80,7 @@ function MemberRow({ member }: { member: Member }) {
   async function handleSave() {
     setSaving(true)
     const { updateDoc, doc: firestoreDoc } = await import('firebase/firestore')
-    await updateDoc(firestoreDoc(db, 'members', member.id), { name, city, category, cuisine })
+    await updateDoc(firestoreDoc(db, 'members', member.id), { name, city, category, cuisine, wccc })
     setMsg('✅ Saved')
     setEditing(false)
     setSaving(false)
@@ -137,6 +138,10 @@ function MemberRow({ member }: { member: Member }) {
           <input value={city} onChange={e => setCity(e.target.value)} placeholder="City" style={inp} />
           <input value={category} onChange={e => setCategory(e.target.value)} placeholder="Category" style={inp} />
           <input value={cuisine} onChange={e => setCuisine(e.target.value)} placeholder="Cuisine (e.g. Chinese, Vietnamese, Thai)" style={inp} />
+          <label className="flex items-center gap-2 cursor-pointer pt-1">
+            <input type="checkbox" checked={wccc} onChange={e => setWccc(e.target.checked)} />
+            <span className="text-xs" style={{ color: 'var(--color-text)' }}>WCCC Member</span>
+          </label>
           <button onClick={handleSave} disabled={saving}
             className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-40"
             style={{ background: 'var(--color-red)', color: '#fff' }}>
