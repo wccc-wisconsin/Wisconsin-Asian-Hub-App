@@ -189,7 +189,6 @@ interface DineModuleProps {
 export default function DineModule({ deepLinkId }: DineModuleProps) {
   const { restaurants, loading }         = useRestaurants()
   const [cuisine, setCuisine]            = useState<Cuisine | 'all'>('all')
-  const [affiliation, setAffiliation]    = useState<'all' | 'wccc'>('all')
   const [submitting, setSubmitting]      = useState(false)
   const [search, setSearch]              = useState('')
   const [sharing, setSharing]            = useState<Restaurant | null>(null)
@@ -219,11 +218,10 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
     return restaurants.filter(r => {
       if (r.featured) return false
       if (cuisine !== 'all' && r.cuisine !== cuisine) return false
-      if (affiliation !== 'all' && r.affiliation !== affiliation) return false
       if (q && !`${r.name} ${r.city} ${r.cuisine} ${r.description ?? ''}`.toLowerCase().includes(q)) return false
       return true
     })
-  }, [restaurants, cuisine, affiliation, search])
+  }, [restaurants, cuisine, search])
 
   function openDetail(r: Restaurant) {
     setDetail(r)
@@ -285,30 +283,10 @@ export default function DineModule({ deepLinkId }: DineModuleProps) {
               style={{ color: 'var(--color-muted)' }}>✕</button>
           )}
         </div>
-        <div className="flex gap-2 mb-2">
-          {([['all', '🗂 All'], ['wccc', '🔴 WCCC Members']] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setAffiliation(val as 'all' | 'wccc')}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-              style={{
-                background: affiliation === val ? 'var(--color-red)' : 'var(--color-surface)',
-                color: affiliation === val ? '#fff' : 'var(--color-muted)',
-                border: `1px solid ${affiliation === val ? 'var(--color-red)' : 'var(--color-border)'}`,
-              }}>
-              {label}
-            </button>
-          ))}
-        </div>
+
 
         <div className="flex gap-2 overflow-x-auto pb-1">
-          <button onClick={() => setCuisine('all')}
-            className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
-            style={{
-              background: cuisine === 'all' ? 'rgba(251,191,36,0.2)' : 'var(--color-surface)',
-              color: cuisine === 'all' ? 'var(--color-gold)' : 'var(--color-muted)',
-              border: `1px solid ${cuisine === 'all' ? 'rgba(251,191,36,0.4)' : 'var(--color-border)'}`,
-            }}>
-            All Cuisines
-          </button>
+
           {availableCuisines.map(c => (
             <button key={c} onClick={() => setCuisine(c)}
               className="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-all"
