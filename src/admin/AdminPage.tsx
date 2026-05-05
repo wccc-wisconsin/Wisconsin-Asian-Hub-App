@@ -10,8 +10,9 @@ import MembersEnrichmentAdmin from './components/MembersEnrichmentAdmin'
 import BusinessDiscoveryAdmin from './components/BusinessDiscoveryAdmin'
 import SponsorsAdmin          from './components/SponsorsAdmin'
 import TrustedResourcesAdmin  from './components/TrustedResourcesAdmin'
+import PlacesResearch         from './components/PlacesResearch'
 
-type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'discovery' | 'sponsors' | 'resources' | 'admins'
+type AdminTab = 'dine' | 'giving' | 'board' | 'events' | 'members' | 'discovery' | 'sponsors' | 'resources' | 'research' | 'admins'
 
 const ADMIN_TABS = [
   { id: 'dine',      icon: '🍜', label: 'Dine'      },
@@ -22,6 +23,7 @@ const ADMIN_TABS = [
   { id: 'discovery', icon: '🔍', label: 'Discovery' },
   { id: 'sponsors',  icon: '🤝', label: 'Sponsors'  },
   { id: 'resources', icon: '⭐', label: 'Resources' },
+  { id: 'research',  icon: '🔬', label: 'Research'  },
   { id: 'admins',    icon: '👤', label: 'Admins'    },
 ] as const
 
@@ -114,6 +116,7 @@ export default function AdminPage() {
         {tab === 'discovery' && <BusinessDiscoveryAdmin />}
         {tab === 'sponsors'  && <SponsorsAdmin />}
         {tab === 'resources' && <TrustedResourcesAdmin />}
+        {tab === 'research'  && <PlacesResearch />}
         {tab === 'admins'    && <AdminUsersPanel currentEmail={user.email ?? ''} />}
       </div>
     </div>
