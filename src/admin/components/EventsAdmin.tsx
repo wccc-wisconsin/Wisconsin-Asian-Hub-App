@@ -62,6 +62,12 @@ export default function EventsAdmin() {
     await deleteDoc(doc(db, 'events', id))
   }
 
+  async function editUrl(id: string, current: string | undefined) {
+    const next = prompt('Registration URL for this event (leave blank to remove):', current ?? '')
+    if (next === null) return
+    await updateDoc(doc(db, 'events', id), { url: next.trim() || null })
+  }
+
   async function updateFlag(id: string, flag: string, checked: boolean) {
     const event = events.find(ev => ev.id === id)
     const current = event?.flag
@@ -276,6 +282,12 @@ export default function EventsAdmin() {
                 🔗 View
               </a>
             )}
+
+            <button onClick={() => editUrl(e.id, e.url)}
+              className="text-xs px-3 py-1.5 rounded-full"
+              style={{ background: 'rgba(217,119,6,0.1)', color: 'var(--color-gold)', border: '1px solid rgba(217,119,6,0.2)' }}>
+              ✏️ Edit URL
+            </button>
 
             <button onClick={() => reject(e.id)}
               className="text-xs px-3 py-1.5 rounded-full"
