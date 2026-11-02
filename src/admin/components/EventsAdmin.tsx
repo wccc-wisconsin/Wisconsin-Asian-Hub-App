@@ -36,7 +36,7 @@ export default function EventsAdmin() {
   const [filter, setFilter]   = useState<'pending' | 'approved' | 'all'>('pending')
 
   useEffect(() => {
-    const q = query(collection(db, 'events'), orderBy('createdAt', 'desc'))
+    const q = query(collection(db, 'events'), orderBy('startDate', 'desc'))
     const unsub = onSnapshot(q, snap => {
       setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as EventWithExtras)))
       setLoading(false)
